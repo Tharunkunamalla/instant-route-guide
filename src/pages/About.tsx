@@ -27,7 +27,7 @@ const About = () => {
   ];
 
   return (
-    <div className="min-h-screen pt-24 pb-12 px-4">
+    <div className="min-h-screen pt-24 pb-12 px-4 bg-gradient-to-br from-background via-secondary/20 to-background">
       <div className="container mx-auto max-w-6xl">
         <motion.div
           initial={{ opacity: 0, y: 20 }}
@@ -36,10 +36,10 @@ const About = () => {
           className="text-center mb-16"
         >
           <h1 className="text-5xl md:text-6xl font-bold mb-6">
-            About SmartRoute
+            About <span className="bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent">SmartRoute</span>
           </h1>
-          <p className="text-xl text-muted-foreground max-w-3xl mx-auto">
-            We're on a mission to revolutionize the way people find and navigate routes
+          <p className="text-xl text-muted-foreground max-w-3xl mx-auto leading-relaxed">
+            We're on a mission to revolutionize the way people find and navigate routes with cutting-edge technology
           </p>
         </motion.div>
 
@@ -50,7 +50,7 @@ const About = () => {
           transition={{ duration: 0.6, delay: 0.2 }}
           className="mb-20"
         >
-          <Card className="shadow-elegant">
+          <Card className="shadow-elegant border-border/50 bg-card/80 backdrop-blur">
             <CardContent className="p-8 md:p-12">
               <h2 className="text-3xl font-bold mb-6">Our Story</h2>
               <div className="space-y-4 text-lg text-muted-foreground">
@@ -88,10 +88,10 @@ const About = () => {
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.6, delay: 0.5 + index * 0.1 }}
               >
-                <Card className="h-full shadow-elegant hover:shadow-xl transition-smooth hover:scale-105">
+                <Card className="h-full shadow-elegant hover:shadow-xl transition-smooth hover:scale-105 hover:-translate-y-1 border-border/50 bg-card/80 backdrop-blur">
                   <CardContent className="p-6">
-                    <div className="w-14 h-14 rounded-xl bg-secondary flex items-center justify-center mb-4">
-                      <value.icon className="w-7 h-7 text-primary" />
+                    <div className="w-14 h-14 rounded-xl bg-gradient-to-br from-primary/10 to-accent/10 flex items-center justify-center mb-4 group-hover:from-primary group-hover:to-accent transition-smooth">
+                      <value.icon className="w-7 h-7 text-primary group-hover:text-white transition-smooth" />
                     </div>
                     <h3 className="text-xl font-semibold mb-3">{value.title}</h3>
                     <p className="text-muted-foreground">{value.description}</p>
@@ -109,7 +109,7 @@ const About = () => {
           transition={{ duration: 0.6, delay: 0.8 }}
           className="mt-20"
         >
-          <Card className="bg-gradient-hero text-white shadow-elegant">
+          <Card className="bg-gradient-hero text-white shadow-2xl border-0">
             <CardContent className="p-8 md:p-12 text-center">
               <h2 className="text-3xl font-bold mb-4">Join Our Journey</h2>
               <p className="text-xl text-white/90 mb-6 max-w-2xl mx-auto">

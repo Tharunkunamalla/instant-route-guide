@@ -48,7 +48,7 @@ const Contact = () => {
   ];
 
   return (
-    <div className="min-h-screen pt-24 pb-12 px-4">
+    <div className="min-h-screen pt-24 pb-12 px-4 bg-gradient-to-br from-background via-secondary/20 to-background">
       <div className="container mx-auto max-w-6xl">
         <motion.div
           initial={{ opacity: 0, y: 20 }}
@@ -57,10 +57,10 @@ const Contact = () => {
           className="text-center mb-16"
         >
           <h1 className="text-5xl md:text-6xl font-bold mb-6">
-            Get In Touch
+            Get <span className="bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent">In Touch</span>
           </h1>
-          <p className="text-xl text-muted-foreground max-w-3xl mx-auto">
-            Have questions or feedback? We'd love to hear from you
+          <p className="text-xl text-muted-foreground max-w-3xl mx-auto leading-relaxed">
+            Have questions or feedback? We'd love to hear from you and help with your needs
           </p>
         </motion.div>
 
@@ -72,7 +72,7 @@ const Contact = () => {
             transition={{ duration: 0.6, delay: 0.2 }}
             className="lg:col-span-2"
           >
-            <Card className="shadow-elegant">
+            <Card className="shadow-elegant border-border/50 bg-card/80 backdrop-blur">
               <CardContent className="p-8">
                 <h2 className="text-2xl font-bold mb-6">Send us a message</h2>
                 <form onSubmit={handleSubmit} className="space-y-6">
@@ -117,7 +117,7 @@ const Contact = () => {
                     />
                   </div>
 
-                  <Button type="submit" className="w-full transition-smooth hover:scale-105">
+                  <Button type="submit" size="lg" className="w-full transition-smooth hover:scale-105 shadow-md">
                     <Send className="w-4 h-4 mr-2" />
                     Send Message
                   </Button>
@@ -133,7 +133,7 @@ const Contact = () => {
             transition={{ duration: 0.6, delay: 0.4 }}
             className="space-y-6"
           >
-            <Card className="shadow-elegant">
+            <Card className="shadow-elegant border-border/50 bg-card/80 backdrop-blur">
               <CardContent className="p-6">
                 <h2 className="text-xl font-bold mb-6">Contact Information</h2>
                 <div className="space-y-6">
@@ -146,8 +146,8 @@ const Contact = () => {
                       transition={{ duration: 0.4, delay: 0.5 + index * 0.1 }}
                       className="flex items-start gap-4 group hover:bg-secondary/50 p-3 rounded-lg transition-smooth"
                     >
-                      <div className="w-12 h-12 rounded-lg bg-secondary flex items-center justify-center group-hover:bg-primary transition-smooth">
-                        <info.icon className="w-6 h-6 text-primary group-hover:text-primary-foreground transition-smooth" />
+                      <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-primary/10 to-accent/10 flex items-center justify-center group-hover:from-primary group-hover:to-accent transition-smooth">
+                        <info.icon className="w-6 h-6 text-primary group-hover:text-white transition-smooth" />
                       </div>
                       <div>
                         <h3 className="font-semibold mb-1">{info.title}</h3>
@@ -159,7 +159,7 @@ const Contact = () => {
               </CardContent>
             </Card>
 
-            <Card className="bg-gradient-hero text-white shadow-elegant">
+            <Card className="bg-gradient-hero text-white shadow-2xl border-0">
               <CardContent className="p-6">
                 <h3 className="text-lg font-bold mb-2">Quick Response</h3>
                 <p className="text-white/90 text-sm">
