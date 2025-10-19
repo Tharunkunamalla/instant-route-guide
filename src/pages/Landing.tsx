@@ -52,8 +52,8 @@ const Landing = () => {
   return (
     <div className="min-h-screen">
       {/* Hero Section */}
-      <section className="relative overflow-hidden pt-32 pb-20 px-4">
-        <div className="absolute inset-0 gradient-hero opacity-10" />
+      <section className="relative overflow-hidden pt-32 pb-20 px-4 bg-gradient-to-br from-background via-secondary/30 to-background">
+        <div className="absolute inset-0 bg-grid-pattern opacity-[0.02]" />
         <div className="container mx-auto relative z-10">
           <motion.div
             initial={{ opacity: 0, y: 30 }}
@@ -72,12 +72,12 @@ const Landing = () => {
               </div>
             </motion.div>
 
-            <h1 className="text-5xl md:text-7xl font-bold mb-6 bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent">
-              Find the Best Routes Instantly!
+            <h1 className="text-5xl md:text-7xl font-bold mb-6 leading-tight">
+              Find the <span className="bg-gradient-to-r from-primary via-accent to-primary bg-clip-text text-transparent">Best Routes</span> Instantly!
             </h1>
 
-            <p className="text-xl md:text-2xl text-muted-foreground mb-8 max-w-2xl mx-auto">
-              Discover the shortest paths between any two places with our intelligent route finder
+            <p className="text-xl md:text-2xl text-muted-foreground mb-8 max-w-2xl mx-auto leading-relaxed">
+              Discover optimal paths between any locations with real-time traffic data and accurate distance calculations
             </p>
 
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
@@ -96,8 +96,8 @@ const Landing = () => {
           </motion.div>
 
           {/* Animated Background Elements */}
-          <div className="absolute top-20 left-10 w-72 h-72 bg-primary/5 rounded-full blur-3xl animate-pulse" />
-          <div className="absolute bottom-20 right-10 w-96 h-96 bg-accent/5 rounded-full blur-3xl animate-pulse delay-1000" />
+          <div className="absolute top-20 left-10 w-72 h-72 bg-primary/10 rounded-full blur-3xl animate-pulse" />
+          <div className="absolute bottom-20 right-10 w-96 h-96 bg-accent/10 rounded-full blur-3xl animate-pulse" style={{ animationDelay: '1s' }} />
         </div>
       </section>
 
@@ -128,13 +128,13 @@ const Landing = () => {
           >
             {features.map((feature, index) => (
               <motion.div key={index} variants={itemVariants}>
-                <Card className="h-full border-border hover:shadow-elegant transition-smooth hover:scale-105 group">
+                <Card className="h-full border-border/50 hover:border-primary/50 hover:shadow-elegant transition-smooth hover:scale-105 hover:-translate-y-1 group bg-card/50 backdrop-blur">
                   <CardContent className="p-6 text-center">
-                    <div className="w-16 h-16 rounded-xl bg-secondary mx-auto mb-4 flex items-center justify-center group-hover:bg-primary transition-smooth">
+                    <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-primary/10 to-accent/10 mx-auto mb-4 flex items-center justify-center group-hover:from-primary group-hover:to-accent transition-smooth">
                       <feature.icon className="w-8 h-8 text-primary group-hover:text-primary-foreground transition-smooth" />
                     </div>
-                    <h3 className="text-xl font-semibold mb-2">{feature.title}</h3>
-                    <p className="text-muted-foreground">{feature.description}</p>
+                    <h3 className="text-xl font-semibold mb-2 group-hover:text-primary transition-smooth">{feature.title}</h3>
+                    <p className="text-muted-foreground leading-relaxed">{feature.description}</p>
                   </CardContent>
                 </Card>
               </motion.div>
@@ -151,7 +151,7 @@ const Landing = () => {
             whileInView={{ opacity: 1, scale: 1 }}
             viewport={{ once: true }}
             transition={{ duration: 0.6 }}
-            className="relative overflow-hidden rounded-3xl gradient-hero p-12 md:p-20 text-center shadow-xl"
+            className="relative overflow-hidden rounded-3xl gradient-hero p-12 md:p-20 text-center shadow-2xl"
           >
             <div className="relative z-10">
               <h2 className="text-4xl md:text-5xl font-bold text-white mb-6">
