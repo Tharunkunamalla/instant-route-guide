@@ -1,30 +1,30 @@
-import { useState, useCallback } from 'react';
-import { motion } from 'framer-motion';
-import { MapPin, Navigation, Clock, Loader2, Search } from 'lucide-react';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { useToast } from '@/hooks/use-toast';
-import GoogleMap from '@/components/GoogleMap';
+import {useState, useCallback} from "react";
+import {motion} from "framer-motion";
+import {MapPin, Navigation, Clock, Loader2, Search} from "lucide-react";
+import {Button} from "../components/ui/button";
+import {Input} from "../components/ui/input";
+import {Card, CardContent, CardHeader, CardTitle} from "../components/ui/card";
+import {useToast} from "../hooks/use-toast";
+import GoogleMap from "../components/GoogleMap";
 
 const MapPage = () => {
-  const [source, setSource] = useState('');
-  const [destination, setDestination] = useState('');
-  const [searchSource, setSearchSource] = useState('');
-  const [searchDestination, setSearchDestination] = useState('');
+  const [source, setSource] = useState("");
+  const [destination, setDestination] = useState("");
+  const [searchSource, setSearchSource] = useState("");
+  const [searchDestination, setSearchDestination] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [routeInfo, setRouteInfo] = useState<{
     distance: string;
     duration: string;
   } | null>(null);
-  const { toast } = useToast();
+  const {toast} = useToast();
 
   const handleFindRoute = () => {
     if (!searchSource || !searchDestination) {
       toast({
-        title: 'Missing Information',
-        description: 'Please enter both source and destination',
-        variant: 'destructive',
+        title: "Missing Information",
+        description: "Please enter both source and destination",
+        variant: "destructive",
       });
       return;
     }
@@ -35,22 +35,25 @@ const MapPage = () => {
     setRouteInfo(null);
   };
 
-  const handleRouteCalculated = useCallback((distance: string, duration: string) => {
-    setRouteInfo({ distance, duration });
-    setIsLoading(false);
-    toast({
-      title: 'Route Found!',
-      description: 'The optimal path has been calculated',
-    });
-  }, [toast]);
+  const handleRouteCalculated = useCallback(
+    (distance: string, duration: string) => {
+      setRouteInfo({distance, duration});
+      setIsLoading(false);
+      toast({
+        title: "Route Found!",
+        description: "The optimal path has been calculated",
+      });
+    },
+    [toast]
+  );
 
   return (
     <div className="min-h-screen pt-24 pb-12 px-4 bg-gradient-to-br from-background via-secondary/20 to-background">
       <div className="container mx-auto">
         <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.6 }}
+          initial={{opacity: 0, y: 20}}
+          animate={{opacity: 1, y: 0}}
+          transition={{duration: 0.6}}
           className="text-center mb-12"
         >
           <h1 className="text-4xl md:text-5xl font-bold mb-4">
@@ -64,9 +67,9 @@ const MapPage = () => {
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 max-w-7xl mx-auto">
           {/* Input Panel */}
           <motion.div
-            initial={{ opacity: 0, x: -20 }}
-            animate={{ opacity: 1, x: 0 }}
-            transition={{ duration: 0.6, delay: 0.2 }}
+            initial={{opacity: 0, x: -20}}
+            animate={{opacity: 1, x: 0}}
+            transition={{duration: 0.6, delay: 0.2}}
             className="lg:col-span-1"
           >
             <Card className="shadow-elegant border-border/50 bg-card/80 backdrop-blur">
@@ -88,7 +91,7 @@ const MapPage = () => {
                       value={searchSource}
                       onChange={(e) => setSearchSource(e.target.value)}
                       className="pl-10"
-                      onKeyPress={(e) => e.key === 'Enter' && handleFindRoute()}
+                      onKeyPress={(e) => e.key === "Enter" && handleFindRoute()}
                     />
                   </div>
                 </div>
@@ -102,7 +105,7 @@ const MapPage = () => {
                       value={searchDestination}
                       onChange={(e) => setSearchDestination(e.target.value)}
                       className="pl-10"
-                      onKeyPress={(e) => e.key === 'Enter' && handleFindRoute()}
+                      onKeyPress={(e) => e.key === "Enter" && handleFindRoute()}
                     />
                   </div>
                 </div>
@@ -128,9 +131,9 @@ const MapPage = () => {
 
                 {routeInfo && (
                   <motion.div
-                    initial={{ opacity: 0, scale: 0.95 }}
-                    animate={{ opacity: 1, scale: 1 }}
-                    transition={{ duration: 0.3 }}
+                    initial={{opacity: 0, scale: 0.95}}
+                    animate={{opacity: 1, scale: 1}}
+                    transition={{duration: 0.3}}
                     className="space-y-3 pt-4 border-t border-border"
                   >
                     <div className="flex items-center justify-between p-4 bg-gradient-to-br from-primary/5 to-accent/5 rounded-xl border border-primary/20">
@@ -140,7 +143,9 @@ const MapPage = () => {
                         </div>
                         <span className="text-sm font-medium">Distance</span>
                       </div>
-                      <span className="font-bold text-lg text-primary">{routeInfo.distance}</span>
+                      <span className="font-bold text-lg text-primary">
+                        {routeInfo.distance}
+                      </span>
                     </div>
                     <div className="flex items-center justify-between p-4 bg-gradient-to-br from-accent/5 to-primary/5 rounded-xl border border-accent/20">
                       <div className="flex items-center gap-3">
@@ -149,7 +154,9 @@ const MapPage = () => {
                         </div>
                         <span className="text-sm font-medium">Duration</span>
                       </div>
-                      <span className="font-bold text-lg text-accent">{routeInfo.duration}</span>
+                      <span className="font-bold text-lg text-accent">
+                        {routeInfo.duration}
+                      </span>
                     </div>
                   </motion.div>
                 )}
@@ -159,9 +166,9 @@ const MapPage = () => {
 
           {/* Map Panel */}
           <motion.div
-            initial={{ opacity: 0, x: 20 }}
-            animate={{ opacity: 1, x: 0 }}
-            transition={{ duration: 0.6, delay: 0.4 }}
+            initial={{opacity: 0, x: 20}}
+            animate={{opacity: 1, x: 0}}
+            transition={{duration: 0.6, delay: 0.4}}
             className="lg:col-span-2"
           >
             <Card className="shadow-elegant h-full min-h-[600px] border-border/50 overflow-hidden">
@@ -177,16 +184,23 @@ const MapPage = () => {
                     <div className="absolute inset-0 flex items-center justify-center">
                       <div className="text-center space-y-4 p-8">
                         <motion.div
-                          animate={{ scale: [1, 1.05, 1] }}
-                          transition={{ repeat: Infinity, duration: 2, ease: 'easeInOut' }}
+                          animate={{scale: [1, 1.05, 1]}}
+                          transition={{
+                            repeat: Infinity,
+                            duration: 2,
+                            ease: "easeInOut",
+                          }}
                           className="w-24 h-24 rounded-2xl bg-gradient-to-br from-primary/10 to-accent/10 mx-auto flex items-center justify-center shadow-lg"
                         >
                           <MapPin className="w-12 h-12 text-primary" />
                         </motion.div>
                         <div>
-                          <h3 className="text-2xl font-bold mb-2">Interactive Map Ready</h3>
+                          <h3 className="text-2xl font-bold mb-2">
+                            Interactive Map Ready
+                          </h3>
                           <p className="text-muted-foreground max-w-md text-lg leading-relaxed">
-                            Enter your source and destination to visualize the optimal route
+                            Enter your source and destination to visualize the
+                            optimal route
                           </p>
                         </div>
                       </div>
@@ -200,24 +214,29 @@ const MapPage = () => {
 
         {/* Info Card */}
         <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.6, delay: 0.6 }}
+          initial={{opacity: 0, y: 20}}
+          animate={{opacity: 1, y: 0}}
+          transition={{duration: 0.6, delay: 0.6}}
           className="mt-8 max-w-7xl mx-auto"
         >
           <Card className="bg-gradient-hero text-white shadow-elegant">
             <CardContent className="p-6">
               <div className="flex flex-col md:flex-row items-center justify-between gap-4">
                 <div className="flex-1">
-                  <h3 className="text-xl font-semibold mb-2">Powered by Google Maps</h3>
-                  <p className="text-white/90">
-                    Real-time routing with live traffic data and accurate distance calculations
+                  <h3 className="text-xl text-black font-semibold mb-2">
+                    Powered by Google Maps
+                  </h3>
+                  <p className="text-black/90">
+                    Real-time routing with live traffic data and accurate
+                    distance calculations
                   </p>
                 </div>
                 <div className="flex items-center gap-3">
                   <div className="text-right">
-                    <div className="text-sm text-white/70">Integrated with</div>
-                    <div className="font-semibold">Google Maps API</div>
+                    <div className="text-sm text-black/70">Integrated with</div>
+                    <div className="font-semibold bg-gradient-to-tr from-[#f1120b] via-[#FBBC05] via-[#0ee848] to-[#0d5ddd] bg-clip-text text-transparent">
+                      Google Maps API
+                    </div>
                   </div>
                   <div className="w-12 h-12 rounded-lg bg-white/20 backdrop-blur flex items-center justify-center">
                     <MapPin className="w-6 h-6 text-white" />

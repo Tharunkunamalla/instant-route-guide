@@ -1,5 +1,7 @@
-import { useEffect, useRef, useState } from 'react';
-import { Loader2 } from 'lucide-react';
+/// <reference types="google.maps" />
+
+import {useEffect, useRef, useState} from "react";
+import {Loader2} from "lucide-react";
 
 interface GoogleMapProps {
   source: string;
@@ -7,27 +9,47 @@ interface GoogleMapProps {
   onRouteCalculated?: (distance: string, duration: string) => void;
 }
 
-const GoogleMap = ({ source, destination, onRouteCalculated }: GoogleMapProps) => {
+const GoogleMap = ({
+  source,
+  destination,
+  onRouteCalculated,
+}: GoogleMapProps) => {
   const mapRef = useRef<HTMLDivElement>(null);
   const [isLoaded, setIsLoaded] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
   const mapInstanceRef = useRef<google.maps.Map | null>(null);
-  const directionsServiceRef = useRef<google.maps.DirectionsService | null>(null);
-  const directionsRendererRef = useRef<google.maps.DirectionsRenderer | null>(null);
+  const directionsServiceRef = useRef<google.maps.DirectionsService | null>(
+    null
+  );
+  const directionsRendererRef = useRef<google.maps.DirectionsRenderer | null>(
+    null
+  );
 
   useEffect(() => {
     const loadGoogleMaps = () => {
+      // ✅ Already loaded
       if (window.google && window.google.maps) {
         setIsLoaded(true);
         return;
       }
 
-      const script = document.createElement('script');
-      script.src = `https://maps.googleapis.com/maps/api/js?key=${import.meta.env.VITE_GOOGLE_MAPS_API_KEY}&libraries=places`;
+      // ✅ Define global callback
+      (window as any).initMap = () => {
+        setIsLoaded(true);
+      };
+
+      // ✅ Prefer .env key, fallback to static one if missing
+      const apiKey =
+        import.meta.env.VITE_GOOGLE_MAPS_API_KEY ||
+        "AIzaSyAOVYRIgupAurZup5y1PRh8Ismb1A3lLao";
+
+      // ✅ Append script with callback
+      const script = document.createElement("script");
+      script.src = `https://maps.googleapis.com/maps/api/js?key=${apiKey}&libraries=places&callback=initMap`;
       script.async = true;
       script.defer = true;
-      script.onload = () => setIsLoaded(true);
-      script.onerror = () => setError('Failed to load Google Maps');
+      script.onerror = () => setError("Failed to load Google Maps");
       document.head.appendChild(script);
     };
 
@@ -37,25 +59,26 @@ const GoogleMap = ({ source, destination, onRouteCalculated }: GoogleMapProps) =
   useEffect(() => {
     if (!isLoaded || !mapRef.current) return;
 
+    // ✅ Create map once
     if (!mapInstanceRef.current) {
       mapInstanceRef.current = new google.maps.Map(mapRef.current, {
-        center: { lat: 28.6139, lng: 77.2090 },
+        center: {lat: 28.6139, lng: 77.209}, // Default to New Delhi
         zoom: 12,
         styles: [
           {
-            featureType: 'all',
-            elementType: 'geometry',
-            stylers: [{ color: '#f5f5f5' }],
+            featureType: "all",
+            elementType: "geometry",
+            stylers: [{color: "#f5f5f5"}],
           },
           {
-            featureType: 'water',
-            elementType: 'geometry',
-            stylers: [{ color: '#c9e6f0' }],
+            featureType: "water",
+            elementType: "geometry",
+            stylers: [{color: "#c9e6f0"}],
           },
           {
-            featureType: 'road',
-            elementType: 'geometry',
-            stylers: [{ color: '#ffffff' }],
+            featureType: "road",
+            elementType: "geometry",
+            stylers: [{color: "#ffffff"}],
           },
         ],
       });
@@ -65,7 +88,7 @@ const GoogleMap = ({ source, destination, onRouteCalculated }: GoogleMapProps) =
         map: mapInstanceRef.current,
         suppressMarkers: false,
         polylineOptions: {
-          strokeColor: '#0ea5e9',
+          strokeColor: "#0ea5e9",
           strokeWeight: 5,
           strokeOpacity: 0.8,
         },
@@ -96,16 +119,19 @@ const GoogleMap = ({ source, destination, onRouteCalculated }: GoogleMapProps) =
 
         const route = result.routes[0];
         if (route && route.legs[0]) {
-          const distance = route.legs[0].distance?.text || '';
-          const duration = route.legs[0].duration?.text || '';
+          const distance = route.legs[0].distance?.text || "";
+          const duration = route.legs[0].duration?.text || "";
           onRouteCalculated?.(distance, duration);
         }
       } else {
-        setError('Could not find route between these locations');
+        setError("Could not find route between these locations");
       }
     });
   }, [source, destination, isLoaded, onRouteCalculated]);
 
+  // =====================
+  // UI STATES
+  // =====================
   if (error) {
     return (
       <div className="w-full h-full flex items-center justify-center bg-secondary/20 rounded-lg">
