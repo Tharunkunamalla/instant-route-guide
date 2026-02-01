@@ -246,7 +246,7 @@ const Landing = () => {
         </div>
       </section>
 
-      {/* CTA Section */}
+      {/* Interactive CTA Section */}
       <section className="py-20 px-4">
         <div className="container mx-auto">
           <motion.div
@@ -254,27 +254,73 @@ const Landing = () => {
             whileInView={{opacity: 1, scale: 1}}
             viewport={{once: true}}
             transition={{duration: 0.6}}
-            className="relative overflow-hidden rounded-3xl gradient-hero p-12 md:p-20 text-center shadow-2xl"
+            className="relative overflow-hidden rounded-3xl gradient-hero p-8 md:p-12 shadow-2xl flex flex-col md:flex-row items-center justify-between gap-12"
           >
-            <div className="relative z-10">
-              <h2 className="text-4xl md:text-5xl font-bold text-white mb-6">
-                Ready to Find Your Route?
+             {/* Text Content */}
+            <div className="relative z-10 text-left md:w-1/2">
+              <h2 className="text-3xl md:text-5xl font-bold text-white mb-6">
+                See Algorithms in Action
               </h2>
-              <p className="text-xl text-white/90 mb-8 max-w-2xl mx-auto">
-                Start discovering the most efficient paths between any locations
-                today
+              <p className="text-lg text-white/90 mb-8 max-w-xl">
+                 Select an algorithm to see a preview, then dive into the full map experience to experiment with real-world data.
               </p>
+              
+              <div className="flex gap-4 mb-8">
+                  <button className="px-4 py-2 bg-white/10 hover:bg-white/20 text-white rounded-full text-sm font-medium backdrop-blur-sm transition transition-all border border-white/10 hover:border-white/30">
+                     BFS
+                  </button>
+                  <button className="px-4 py-2 bg-white/10 hover:bg-white/20 text-white rounded-full text-sm font-medium backdrop-blur-sm transition transition-all border border-white/10 hover:border-white/30">
+                     Dijkstra
+                  </button>
+                  <button className="px-4 py-2 bg-white/10 hover:bg-white/20 text-white rounded-full text-sm font-medium backdrop-blur-sm transition transition-all border border-white/10 hover:border-white/30">
+                     A*
+                  </button>
+              </div>
+
               <Link to="/map">
                 <Button
                   size="lg"
                   variant="secondary"
                   className="text-lg px-8 transition-smooth hover:scale-105"
                 >
-                  Try It Now
+                  Launch Visualizer
                   <ArrowRight className="ml-2 w-5 h-5" />
                 </Button>
               </Link>
             </div>
+
+            {/* Interactive Visual Placeholder - Simple Animation */}
+            <div className="relative z-10 md:w-1/2 flex justify-center items-center">
+                <div className="relative w-64 h-64 bg-white/10 backdrop-blur-md rounded-2xl border border-white/20 p-6 shadow-inner">
+                    <div className="absolute inset-0 flex items-center justify-center text-white/20 text-sm font-mono pointer-events-none">
+                        Interactive Preview
+                    </div>
+                    {/* Simplified Nodes Visualization */}
+                    <svg viewBox="0 0 100 100" className="w-full h-full overflow-visible">
+                        {/* Edges */}
+                        <line x1="20" y1="80" x2="50" y2="20" stroke="rgba(255,255,255,0.3)" strokeWidth="2"/>
+                        <line x1="50" y1="20" x2="80" y2="80" stroke="rgba(255,255,255,0.3)" strokeWidth="2"/>
+                        <line x1="20" y1="80" x2="80" y2="80" stroke="rgba(255,255,255,0.3)" strokeWidth="2"/>
+                        
+                        {/* Animated Path */}
+                        <motion.path 
+                            d="M 20 80 L 50 20 L 80 80" 
+                            fill="transparent"
+                            stroke="#fff"
+                            strokeWidth="3"
+                            initial={{ pathLength: 0 }}
+                            animate={{ pathLength: 1 }}
+                            transition={{ duration: 1.5, repeat: Infinity, repeatDelay: 1 }}
+                        />
+
+                        {/* Nodes */}
+                        <circle cx="20" cy="80" r="6" fill="#fff"/>
+                        <circle cx="50" cy="20" r="6" fill="#fff"/>
+                        <circle cx="80" cy="80" r="6" fill="#fff"/>
+                    </svg>
+                </div>
+            </div>
+
             <div className="absolute -top-10 -right-10 w-64 h-64 bg-white/10 rounded-full blur-3xl" />
             <div className="absolute -bottom-10 -left-10 w-80 h-80 bg-white/10 rounded-full blur-3xl" />
           </motion.div>
