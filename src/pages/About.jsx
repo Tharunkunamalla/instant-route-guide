@@ -64,13 +64,49 @@ const About = () => {
                   powerful routing algorithms with an intuitive, beautiful interface. The result is
                   SmartRoute - a tool that anyone can use, anywhere, anytime.
                 </p>
-                <p>
-                  Today, we're proud to serve thousands of users who rely on SmartRoute for their daily
-                  navigation needs, from planning road trips to finding the quickest way across town.
-                </p>
               </div>
             </CardContent>
           </Card>
+        </motion.div>
+
+        {/* How It Works Section */}
+        <motion.div
+           initial={{ opacity: 0, y: 20 }}
+           animate={{ opacity: 1, y: 0 }}
+           transition={{ duration: 0.6, delay: 0.3 }}
+           className="mb-20"
+        >
+           <div className="bg-card/50 backdrop-blur border border-border/50 rounded-xl p-8 md:p-12">
+               <h2 className="text-3xl font-bold mb-8 text-center">How It Works</h2>
+               <div className="space-y-8 text-muted-foreground text-lg leading-relaxed">
+                   <div>
+                       <h3 className="text-xl font-semibold text-foreground mb-2">Graph Construction & Mapping</h3>
+                       <p>
+                           Our route finding system works by converting real-world map data from OpenStreetMap into a graph made of nodes (intersections) and edges (roads). 
+                           When you select a source and destination, the system searches within a small radius around your click to find the nearest valid road nodes, ensuring the route starts and ends on an actual road.
+                       </p>
+                   </div>
+                   
+                   <div>
+                       <h3 className="text-xl font-semibold text-foreground mb-2">Pathfinding Logic</h3>
+                       <p>
+                           Once the nodes are identified, the backend runs a pathfinding algorithm like Dijkstra or A*. 
+                           The algorithm explores connected road nodes, accumulating travel distance and prioritizing paths based on cost. 
+                           As it progresses, it tracks the "parent" of each visited node to reconstruct the path later.
+                       </p>
+                   </div>
+
+                   <div>
+                       <h3 className="text-xl font-semibold text-foreground mb-2">Visualization</h3>
+                       <p>
+                           What you see in the visualization is the live exploration process. 
+                           The <span className="text-blue-500 font-bold">blue dots</span> represent nodes the algorithm has visited or considered. 
+                           The order of their appearance reflects the algorithm's expansion strategy.
+                           Finally, the <span className="text-yellow-500 font-bold">yellow path</span> shows the reconstructed optimal route, created by backtracking from the destination to the source using parent links.
+                       </p>
+                   </div>
+               </div>
+           </div>
         </motion.div>
 
         {/* Values Section */}

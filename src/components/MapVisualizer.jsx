@@ -59,21 +59,28 @@ const MapVisualizer = ({
         })
       ))}
 
-      {/* Render Nodes */}
+      {/* Render Nodes - Only visited/relevant ones */}
       {Object.values(graph).map(node => {
+        const isSource = String(node.id) === String(source);
+        const isDest = String(node.id) === String(destination);
+        const isVisited = visitedNodes?.includes(String(node.id));
+        const isPath = path?.includes(String(node.id));
+
+        if (!isSource && !isDest && !isVisited && !isPath) return null;
+
         let color = "blue";
         let radiusSize = 5;
 
-        if (node.id === source) {
+        if (isSource) {
             color = "green";
-            radiusSize = 10;
-        } else if (node.id === destination) {
+            radiusSize = 8;
+        } else if (isDest) {
             color = "red";
-            radiusSize = 10;
-        } else if (path?.includes(node.id)) {
+            radiusSize = 8;
+        } else if (isPath) {
             color = "yellow";
-        } else if (visitedNodes?.includes(node.id)) {
-            color = "purple"; // animated visited
+        } else if (isVisited) {
+            color = "blue"; // Visualization color for visited
         }
 
         return (
