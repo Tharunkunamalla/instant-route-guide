@@ -2,9 +2,37 @@ import { Link } from 'react-router-dom';
 import { MapPin, Github, Twitter, Linkedin, Mail, ArrowRight, Heart } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import { useState, useEffect } from 'react';
 
 const Footer = () => {
   const currentYear = new Date().getFullYear();
+  const [region, setRegion] = useState("Telangana");
+  const [load, setLoad] = useState(24);
+
+  // Listen for Map updates
+  useEffect(() => {
+      const handleRegionUpdate = (e) => {
+          setRegion(e.detail);
+          // Spike load on activity
+          setLoad(prev => Math.min(95, prev + 30));
+      };
+      window.addEventListener('region-update', handleRegionUpdate);
+      return () => window.removeEventListener('region-update', handleRegionUpdate);
+  }, []);
+
+  // Glitchy Load Effect
+  useEffect(() => {
+      const interval = setInterval(() => {
+          setLoad(prev => {
+              const change = (Math.random() - 0.5) * 15; // Fluctuate by +/- 7.5%
+              let newVal = prev + change;
+              if (newVal < 10) newVal = 10;
+              if (newVal > 90) newVal = 90;
+              return Math.round(newVal);
+          });
+      }, 800);
+      return () => clearInterval(interval);
+  }, []);
 
   return (
     <footer className="relative bg-zinc-950 text-zinc-300 overflow-hidden border-t border-zinc-800">
@@ -83,7 +111,7 @@ const Footer = () => {
           {/* System Status - Replaces Newsletter */}
           <div className="space-y-6">
             <h3 className="text-white font-semibold text-lg">System Status</h3>
-            <div className="bg-zinc-900/50 rounded-xl p-4 border border-zinc-800 space-y-4 backdrop-blur-sm">
+            <div className="bg-zinc-900/50 rounded-xl p-4 border border-zinc-800 space-y-4 backdrop-blur-sm transition-all duration-500 hover:border-blue-500/30">
                  {/* Status Indicator */}
                  <div className="flex items-center justify-between">
                      <span className="text-zinc-400 text-sm">Server Status</span>
@@ -99,17 +127,20 @@ const Footer = () => {
                  {/* Live Region */}
                  <div className="flex items-center justify-between text-sm">
                      <span className="text-zinc-400">Active Region</span>
-                     <span className="text-white">Telangana</span>
+                     <span className="text-white font-mono transition-all duration-300">{region}</span>
                  </div>
 
-                 {/* Faux Load Metric */}
+                 {/* Glitchy Load Metric */}
                  <div className="space-y-2">
                      <div className="flex justify-between text-xs">
                          <span className="text-zinc-500">Network Load</span>
-                         <span className="text-blue-400">24%</span>
+                         <span className="text-blue-400 font-mono min-w-[30px] text-right">{load}%</span>
                      </div>
                      <div className="h-1.5 w-full bg-zinc-800 rounded-full overflow-hidden">
-                         <div className="h-full bg-blue-500 w-[24%] rounded-full animate-pulse"></div>
+                         <div 
+                            className="h-full bg-blue-500 rounded-full transition-all duration-700 ease-out"
+                            style={{ width: `${load}%` }}
+                         />
                      </div>
                  </div>
 
