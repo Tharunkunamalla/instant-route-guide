@@ -205,7 +205,22 @@ const MapPage = () => {
         return;
     }
 
-    setRouteInfo({ distance: Math.round(result.distance) + " m", duration: Math.round(result.distance / 10) + " s" }); 
+    // Format distance
+    const d = result.distance;
+    const distanceStr = d > 1000 
+        ? `${(d / 1000).toFixed(2)} km` 
+        : `${Math.round(d)} m`;
+
+    // Format duration (assuming ~35km/h or 10m/s for city driving)
+    const seconds = Math.round(d / 10);
+    const durationStr = seconds > 60 
+        ? `${Math.floor(seconds / 60)} min ${seconds % 60} s` 
+        : `${seconds} s`;
+
+    setRouteInfo({ 
+        distance: distanceStr, 
+        duration: durationStr 
+    }); 
     
     // Start animation
     animate(result.visitedOrder, result.path);
@@ -230,15 +245,15 @@ const MapPage = () => {
             className="text-center mb-4"
         >
           <h1 className="text-4xl md:text-5xl font-bold mb-2">Geo Pathfinder Visualizer</h1>
-          <p className="text-xl text-muted-foreground">
+          <div className="min-h-[2rem] flex items-center justify-center text-xl text-muted-foreground">
               {isGraphLoading 
-                ? <span className="flex items-center justify-center gap-2"><Loader2 className="animate-spin h-5 w-5"/> Fetching real-world road data...</span>
+                ? <span className="flex items-center gap-2"><Loader2 className="animate-spin h-4 w-4"/> Fetching real-world road data...</span>
                 : source === null 
                     ? "Click anywhere on the map to set source" 
                     : destination === null 
                         ? "Select a destination node" 
                         : "Ready to visualize"}
-          </p>
+          </div>
         </motion.div>
 
         <div className={`grid gap-6 mx-auto mb-12 h-[82vh] transition-all duration-500 ${isExpanded ? 'grid-cols-1' : 'grid-cols-1 lg:grid-cols-3 max-w-7xl'}`}>
@@ -247,7 +262,7 @@ const MapPage = () => {
               Let's make Sidebar collapsible or side-by-side depending on expansion.
           */}
           {!isExpanded && (
-              <Card className="lg:col-span-1 shadow-elegant bg-card/80 backdrop-blur h-full flex flex-col">
+              <Card className="lg:col-span-1 shadow-elegant bg-card/80 backdrop-blur h-full flex flex-col overflow-hidden">
                 <CardHeader>
                   <CardTitle className="flex justify-between items-center">
                     Controls
@@ -298,7 +313,7 @@ const MapPage = () => {
                    </div>
 
                    <Button onClick={calculateRoute} className="w-full bg-blue-600 hover:bg-blue-700 text-white" disabled={isLoading || !destination}>
-                     {isLoading ? <Loader2 className="animate-spin mr-2"/> : <Play className="mr-2 h-4 w-4"/>} Visualize Route
+                     {isLoading ? <Loader2 className="animate-spin mr-2 h-4 w-4"/> : <Play className="mr-2 h-4 w-4"/>} Visualize Route
                    </Button>
                    
                    {routeInfo && (
@@ -308,7 +323,7 @@ const MapPage = () => {
                                 <span className="font-bold">{routeInfo.distance}</span>
                            </div>
                            <div className="flex justify-between">
-                                <span className="text-sm text-muted-foreground">Est. Time</span>
+                                <span className="text-sm text-muted-foreground">Est. Time <span className="text-xs opacity-70">(Driving)</span></span>
                                 <span className="font-bold">{routeInfo.duration}</span>
                            </div>
                        </div>
