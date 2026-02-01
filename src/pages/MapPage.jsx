@@ -277,8 +277,8 @@ const MapPage = () => {
                     Controls
                     <div className="flex gap-2">
                         <Link to="/immersive">
-                             <Button variant="outline" size="icon" title="Switch to Immersive View">
-                                 <Maximize2 className="h-4 w-4" />
+                             <Button variant="outline" size="sm" className="gap-2 text-blue-400 border-blue-500/30 hover:bg-blue-500/10 hover:text-blue-300 transition-colors">
+                                 <Maximize2 className="h-4 w-4" /> Immersive Mode
                              </Button>
                         </Link>
                         <Button variant="ghost" size="icon" onClick={handleReset} title="Reset All">
