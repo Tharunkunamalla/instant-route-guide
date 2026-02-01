@@ -152,15 +152,33 @@ const Footer = () => {
         </div>
         {/* <hr className="border-zinc-800 mt-9 relative z-10"/> */}
         {/* Bottom Bar */}
-        <div className="mt-16 pt-8 border-t border-zinc-900 flex flex-col md:flex-row justify-center items-center gap-4">
+        <div className="mt-16 pt-8 border-t border-zinc-900 flex flex-col md:flex-row justify-between items-center gap-4">
           <p className="text-zinc-500 text-sm">
             © {currentYear} SmartRoute. Based on OpenStreetMap data.
           </p>
-          {/* <div className="flex items-center text-sm text-zinc-500">
-             <span>Made with</span>
-             <Heart className="w-4 h-4 mx-1.5 text-red-500 fill-red-500 animate-pulse" />
-             <span>by  </span>
-          </div> */}
+          
+          <a 
+            href="https://github.com/Tharunkunamalla" 
+            target="_blank" 
+            rel="noopener noreferrer"
+            className="flex items-center gap-3 group bg-zinc-900/30 hover:bg-zinc-900 px-4 py-2 rounded-full border border-zinc-800/50 hover:border-blue-500/50 transition-all duration-300 hover:shadow-[0_0_15px_rgba(59,130,246,0.2)]"
+          >
+              <div className="flex flex-col items-end leading-none">
+                  <span className="text-[10px] text-zinc-500 font-medium uppercase tracking-wider mb-0.5 group-hover:text-blue-400/80 transition-colors">Developed by</span>
+                  <span className="text-sm font-semibold text-zinc-300 group-hover:text-white transition-colors">Tharun Kunamalla</span>
+              </div>
+              <div className="relative">
+                  <img 
+                    src="https://github.com/Tharunkunamalla.png" 
+                    alt="Tharun Kunamalla" 
+                    className="w-9 h-9 rounded-full border-2 border-zinc-700/50 group-hover:border-blue-500 transition-all duration-500 group-hover:scale-110 group-hover:rotate-6"
+                  />
+                  <span className="absolute -bottom-0.5 -right-0.5 flex h-3 w-3">
+                    <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-blue-400 opacity-75"></span>
+                    <span className="relative inline-flex rounded-full h-3 w-3 bg-blue-500 border-2 border-zinc-900"></span>
+                  </span>
+              </div>
+          </a>
         </div>
       </div>
     </footer>
