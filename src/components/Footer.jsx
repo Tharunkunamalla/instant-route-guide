@@ -52,7 +52,7 @@ const Footer = () => {
               <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-blue-600 to-indigo-600 flex items-center justify-center shadow-lg group-hover:scale-105 transition-transform duration-300">
                 <MapPin className="w-6 h-6 text-white" />
               </div>
-              <span className="text-2xl font-bold text-white tracking-tight">SmartRoute</span>
+              <span className="text-2xl font-bold text-white tracking-tight">GraphPath</span>
             </Link>
             <p className="text-zinc-400 text-sm leading-relaxed max-w-xs">
               Navigating the world with intelligent algorithms. Visualizing efficient paths on real-world maps.
@@ -154,7 +154,7 @@ const Footer = () => {
         {/* Bottom Bar */}
         <div className="mt-16 pt-8 border-t border-zinc-900 flex flex-col md:flex-row justify-between items-center gap-4">
           <p className="text-zinc-500 text-sm">
-            © {currentYear} SmartRoute. Based on OpenStreetMap data.
+            © {currentYear} GraphPath. Based on OpenStreetMap data.
           </p>
           
           <a 

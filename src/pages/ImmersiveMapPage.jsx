@@ -185,7 +185,7 @@ const ImmersiveMapPage = () => {
                     <MapIcon className="w-6 h-6 text-white" />
                 </div>
                 <h1 className="text-2xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-blue-400 to-emerald-400">
-                    Geo Pathfinder
+                    GraphPath
                 </h1>
              </div>
              <p className="text-sm text-zinc-400">

@@ -253,7 +253,7 @@ const MapPage = () => {
             animate={{opacity: 1, y: 0}}
             className="text-center mb-4"
         >
-          <h1 className="text-4xl md:text-5xl font-bold mb-2">Geo Pathfinder Visualizer</h1>
+          <h1 className="text-4xl md:text-5xl font-bold mb-2">GraphPath Visualizer</h1>
           <div className="min-h-[2rem] flex items-center justify-center text-xl text-muted-foreground">
               {isGraphLoading 
                 ? <span className="flex items-center gap-2"><Loader2 className="animate-spin h-4 w-4"/> Fetching real-world road data...</span>
