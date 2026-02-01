@@ -177,10 +177,10 @@ const Contact = () => {
               </CardContent>
             </Card>
 
-            <Card className="bg-gradient-hero text-white shadow-2xl border-0">
+            <Card className="bg-gradient-hero text-black shadow-2xl border-0">
               <CardContent className="p-6">
-                <h3 className="text-lg font-bold mb-2">Quick Response</h3>
-                <p className="text-white/90 text-sm">
+                <h3 className="text-lg font-bold mb-2 ">Quick Response</h3>
+                <p className="text-black/90 text-sm">
                   We typically respond to all inquiries within 24 hours during
                   business days.
                 </p>

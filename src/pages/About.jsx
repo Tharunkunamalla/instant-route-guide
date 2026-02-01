@@ -145,15 +145,15 @@ const About = () => {
           transition={{ duration: 0.6, delay: 0.8 }}
           className="mt-20"
         >
-          <Card className="bg-gradient-hero text-white shadow-2xl border-0">
+          <Card className="bg-gradient-hero text-black shadow-2xl border-0">
             <CardContent className="p-8 md:p-12 text-center">
               <h2 className="text-3xl font-bold mb-4">Join Our Journey</h2>
-              <p className="text-xl text-white/90 mb-6 max-w-2xl mx-auto">
+              <p className="text-xl text-black/90 mb-6 max-w-2xl mx-auto">
                 We're always looking for talented individuals who share our passion for
                 creating exceptional user experiences.
               </p>
-              <div className="text-white/80">
-                Contact us at <span className="font-semibold">careers@smartroute.com</span>
+              <div className="text-black/80">
+                Contact us at <span className="font-semibold text-blue-500">careers@smartroute.com</span>
               </div>
             </CardContent>
           </Card>
