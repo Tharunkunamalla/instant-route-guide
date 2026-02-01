@@ -222,14 +222,14 @@ const MapPage = () => {
   };
 
   return (
-    <div className="min-h-screen pt-24 pb-12 px-4 bg-gradient-to-br from-background via-secondary/20 to-background">
+    <div className="min-h-screen pt-24 pb-24 px-4 bg-gradient-to-br from-background via-secondary/20 to-background relative z-10">
       <div className={`container mx-auto transition-all duration-500 ${isExpanded ? 'max-w-[95vw]' : ''}`}>
         <motion.div
             initial={{opacity: 0, y: 20}}
             animate={{opacity: 1, y: 0}}
-            className="text-center mb-8"
+            className="text-center mb-4"
         >
-          <h1 className="text-4xl md:text-5xl font-bold mb-4">Geo Pathfinder Visualizer</h1>
+          <h1 className="text-4xl md:text-5xl font-bold mb-2">Geo Pathfinder Visualizer</h1>
           <p className="text-xl text-muted-foreground">
               {isGraphLoading 
                 ? <span className="flex items-center justify-center gap-2"><Loader2 className="animate-spin h-5 w-5"/> Fetching real-world road data...</span>
@@ -241,7 +241,7 @@ const MapPage = () => {
           </p>
         </motion.div>
 
-        <div className={`grid gap-6 mx-auto h-[80vh] transition-all duration-500 ${isExpanded ? 'grid-cols-1' : 'grid-cols-1 lg:grid-cols-3 max-w-7xl'}`}>
+        <div className={`grid gap-6 mx-auto mb-12 h-[82vh] transition-all duration-500 ${isExpanded ? 'grid-cols-1' : 'grid-cols-1 lg:grid-cols-3 max-w-7xl'}`}>
           {/* Sidebar - Hidden or Floating when expanded? For now, let's keep it but maybe stack or hide controls if fully immersive? 
               Actually user asked to enlarge map. 
               Let's make Sidebar collapsible or side-by-side depending on expansion.
@@ -256,7 +256,7 @@ const MapPage = () => {
                     </Button>
                   </CardTitle>
                 </CardHeader>
-                <CardContent className="space-y-6 flex-1 overflow-y-auto">
+                <CardContent className="space-y-6 flex-1 overflow-y-auto min-h-0 scrollbar-thin scrollbar-thumb-secondary/50 scrollbar-track-transparent pr-2">
                    <div className="space-y-2">
                      <label className="text-sm font-medium">Source</label>
                      <Input value={source !== null ? `Lat: ${graph[source]?.lat.toFixed(4)}` : ''} readOnly placeholder="Click on map to start" />
