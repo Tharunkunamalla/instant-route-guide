@@ -55,9 +55,6 @@ const ImmersiveMapPage = () => {
 
   // Load Map Data on Mount
   useEffect(() => {
-    // Default location: Gachibowli, Hyderabad - Load ONLY, do not set source
-    loadGraph(17.4401, 78.3489);
-    
     // Listen for custom region updates if we want to sync
     const handleRegionUpdate = (e) => {
         // Just purely for visual feedback if needed
