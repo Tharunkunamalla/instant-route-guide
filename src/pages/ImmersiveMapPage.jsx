@@ -30,10 +30,33 @@ const ImmersiveMapPage = () => {
   const [routeInfo, setRouteInfo] = useState(null);
   const { toast } = useToast();
 
+  const loadGraph = async (lat, lng) => {
+      setIsGraphLoading(true);
+      try {
+          toast({ title: "Loading Region", description: "Fetching road network..." });
+          const osmData = await fetchRoadNetwork(lat, lng, RADIUS_METERS);
+          if (!osmData) { setIsGraphLoading(false); return null; }
+
+          const newGraph = buildGraphFromOSM(osmData);
+          if (Object.keys(newGraph).length === 0) {
+              setIsGraphLoading(false);
+              return null;
+          }
+          setGraph(newGraph);
+          window.dispatchEvent(new CustomEvent('region-update', { detail: "Telangana (Hyd)" }));
+          return newGraph;
+      } catch (err) {
+          console.error(err);
+          return null;
+      } finally {
+          setIsGraphLoading(false);
+      }
+  };
+
   // Load Map Data on Mount
   useEffect(() => {
-    // Default location: Gachibowli, Hyderabad
-    handleMapClick(17.4401, 78.3489);
+    // Default location: Gachibowli, Hyderabad - Load ONLY, do not set source
+    loadGraph(17.4401, 78.3489);
     
     // Listen for custom region updates if we want to sync
     const handleRegionUpdate = (e) => {
@@ -55,63 +78,37 @@ const ImmersiveMapPage = () => {
 
       if (source !== null && destination !== null) return; 
 
-      if (graph && Object.keys(graph).length > 0) {
-          // Check bounds
-          if (Object.keys(graph).length > 0) {
-              const centerNode = Object.values(graph)[0]; 
-              const dist = Math.sqrt(Math.pow(lat - centerNode.lat, 2) + Math.pow(lng - centerNode.lng, 2));
-               // Approx check (very rough lat/lng dist)
-              if (dist > 0.05) { 
-                   toast({ 
-                       title: "Out of Bounds", 
-                       description: 'Please click within the loaded active region.', 
-                       variant: "destructive" 
-                   });
-                   return;
-              }
-          }
+      let currentGraph = graph;
 
-          // Setting Destination
-          const nearest = findNearestNode(lat, lng, graph);
-          if (nearest && nearest.nodeId) {
-             if (source === null) {
-                 setSource(String(nearest.nodeId));
-                 toast({ title: "Source Set", description: "Now select a destination." });
-             } else {
-                 setDestination(String(nearest.nodeId));
-                 toast({ title: "Destination Set", description: "Ready to visualize." });
-             }
-          }
-          return;
+      // If graph is empty, load it first
+      if (!currentGraph || Object.keys(currentGraph).length === 0) {
+           const newGraph = await loadGraph(lat, lng);
+           if (!newGraph) return;
+           currentGraph = newGraph;
+      } else {
+          // Check bounds logic
+          const centerNode = Object.values(currentGraph)[0]; 
+          const dist = Math.sqrt(Math.pow(lat - centerNode.lat, 2) + Math.pow(lng - centerNode.lng, 2));
+           if (dist > 0.05) { 
+                toast({ 
+                    title: "Out of Bounds", 
+                    description: 'Please click within the loaded active region.', 
+                    variant: "destructive" 
+                });
+                return;
+           }
       }
-      
-      // Initial Load
-      if (source !== null) return; 
-      
-      setIsGraphLoading(true);
-      try {
-          toast({ title: "Loading Region", description: "Fetching road network..." });
-          const osmData = await fetchRoadNetwork(lat, lng, RADIUS_METERS);
-          if (!osmData) { setIsGraphLoading(false); return; }
 
-          const newGraph = buildGraphFromOSM(osmData);
-          if (Object.keys(newGraph).length === 0) {
-              setIsGraphLoading(false);
-              return;
-          }
-
-          setGraph(newGraph);
-          
-          const nearest = findNearestNode(lat, lng, newGraph);
-          if (nearest && nearest.nodeId) {
+      // Setting Source or Destination
+      const nearest = findNearestNode(lat, lng, currentGraph);
+      if (nearest && nearest.nodeId) {
+         if (source === null) {
              setSource(String(nearest.nodeId));
-             window.dispatchEvent(new CustomEvent('region-update', { detail: "Telangana (Hyd)" }));
-          }
-
-      } catch (err) {
-          console.error(err);
-      } finally {
-          setIsGraphLoading(false);
+             toast({ title: "Source Set", description: "Now select a destination." });
+         } else {
+             setDestination(String(nearest.nodeId));
+             toast({ title: "Destination Set", description: "Ready to visualize." });
+         }
       }
   };
 
