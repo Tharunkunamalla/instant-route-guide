@@ -50,11 +50,11 @@ const Navbar = () => {
                 )}
               </Link>
             ))}
-            <Link to="/map">
+            {/* <Link to="/map">
               <Button size="sm" className="transition-smooth hover:scale-105">
                 Try Now
               </Button>
-            </Link>
+            </Link> */}
           </div>
 
           {/* Mobile Menu Button */}
@@ -91,11 +91,11 @@ const Navbar = () => {
                   {link.name}
                 </Link>
               ))}
-              <Link to="/map" onClick={() => setIsOpen(false)}>
+              {/* <Link to="/map" onClick={() => setIsOpen(false)}>
                 <Button size="sm" className="w-full">
                   Try Now
                 </Button>
-              </Link>
+              </Link> */}
             </div>
           </motion.div>
         )}

@@ -3,8 +3,91 @@ import {motion} from "framer-motion";
 import {MapPin, Zap, Route, Clock, ArrowRight} from "lucide-react";
 import {Button} from "../components/ui/button";
 import {Card, CardContent} from "../components/ui/card";
+import { useRef, useState, useEffect } from "react";
+import gsap from "gsap";
+import { useGSAP } from "@gsap/react";
 
 const Landing = () => {
+  const containerRef = useRef(null);
+  const canvasRef = useRef(null);
+
+
+  useGSAP(() => {
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+    const ctx = canvas.getContext('2d');
+    let width = canvas.width = canvas.offsetWidth;
+    let height = canvas.height = canvas.offsetHeight;
+
+    const points = [];
+    const numPoints = 60; // Number of floating nodes
+
+    // Initialize points
+    for(let i=0; i<numPoints; i++) {
+        points.push({
+            x: Math.random() * width,
+            y: Math.random() * height,
+            vx: (Math.random() - 0.5) * 0.5, // Velocity
+            vy: (Math.random() - 0.5) * 0.5,
+            size: Math.random() * 2 + 1
+        });
+    }
+
+    const render = () => {
+        ctx.clearRect(0, 0, width, height);
+        
+        // Update and draw points
+        points.forEach(p => {
+            p.x += p.vx;
+            p.y += p.vy;
+
+            // Bounce off walls
+            if(p.x < 0 || p.x > width) p.vx *= -1;
+            if(p.y < 0 || p.y > height) p.vy *= -1;
+
+            ctx.beginPath();
+            ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
+            ctx.fillStyle = 'rgba(59, 130, 246, 0.5)'; // Primary blue-ish
+            ctx.fill();
+        });
+
+        // Draw connections
+        ctx.strokeStyle = 'rgba(59, 130, 246, 0.15)';
+        ctx.lineWidth = 1;
+        
+        for(let i=0; i<points.length; i++) {
+            for(let j=i+1; j<points.length; j++) {
+                const dx = points[i].x - points[j].x;
+                const dy = points[i].y - points[j].y;
+                const dist = Math.sqrt(dx*dx + dy*dy);
+
+                if(dist < 150) { // Connection distance
+                    ctx.beginPath();
+                    ctx.moveTo(points[i].x, points[i].y);
+                    ctx.lineTo(points[j].x, points[j].y);
+                    ctx.stroke();
+                }
+            }
+        }
+    };
+
+    // GSAP Ticker for efficient animation loop
+    gsap.ticker.add(render);
+
+    // Handle Resize
+    const onResize = () => {
+        width = canvas.width = canvas.offsetWidth;
+        height = canvas.height = canvas.offsetHeight;
+    };
+    window.addEventListener('resize', onResize);
+
+    return () => {
+        gsap.ticker.remove(render);
+        window.removeEventListener('resize', onResize);
+    };
+
+  }, { scope: containerRef });
+
   const features = [
     {
       icon: Zap,
@@ -54,10 +137,15 @@ const Landing = () => {
   };
 
   return (
-    <div className="min-h-screen">
+    <div className="min-h-screen" ref={containerRef}>
       {/* Hero Section */}
-      <section className="relative overflow-hidden pt-32 pb-20 px-4 bg-gradient-to-br from-background via-secondary/30 to-background">
-        <div className="absolute inset-0 bg-grid-pattern opacity-[0.02]" />
+      <section className="relative overflow-hidden pt-32 pb-20 px-4 bg-gradient-to-br from-background via-secondary/30 to-background min-h-[90vh] flex items-center">
+        {/* GSAP Canvas Background */}
+        <canvas 
+            ref={canvasRef} 
+            className="absolute inset-0 w-full h-full pointer-events-none opacity-60"
+        />
+        
         <div className="container mx-auto relative z-10">
           <motion.div
             initial={{opacity: 0, y: 30}}
@@ -71,7 +159,7 @@ const Landing = () => {
               transition={{delay: 0.2, type: "spring", stiffness: 200}}
               className="inline-block mb-6"
             >
-              <div className="w-20 h-20 rounded-2xl bg-primary flex items-center justify-center shadow-elegant">
+              <div className="w-20 h-20 rounded-2xl bg-primary flex items-center justify-center shadow-elegant backdrop-blur-sm bg-primary/90">
                 <MapPin className="w-10 h-10 text-primary-foreground" />
               </div>
             </motion.div>
@@ -103,20 +191,13 @@ const Landing = () => {
                 <Button
                   size="lg"
                   variant="outline"
-                  className="text-lg px-8 transition-smooth hover:scale-105"
+                  className="text-lg px-8 transition-smooth hover:scale-105 bg-background/50 backdrop-blur"
                 >
                   Learn More
                 </Button>
               </Link>
             </div>
           </motion.div>
-
-          {/* Animated Background Elements */}
-          <div className="absolute top-20 left-10 w-72 h-72 bg-primary/10 rounded-full blur-3xl animate-pulse" />
-          <div
-            className="absolute bottom-20 right-10 w-96 h-96 bg-accent/10 rounded-full blur-3xl animate-pulse"
-            style={{animationDelay: "1s"}}
-          />
         </div>
       </section>
 
