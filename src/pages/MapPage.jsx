@@ -143,7 +143,7 @@ const MapPage = () => {
      speedRef.current = speed;
   }, [speed]);
 
-  const animate = async (visited, finalPath) => {
+  const animate = async (visited, finalPath, onComplete) => {
     setIsLoading(true);
     setVisitedNodes([]);
     setPath([]);
@@ -154,6 +154,7 @@ const MapPage = () => {
         if (i >= visited.length) {
             setPath(finalPath);
             setIsLoading(false);
+            if (onComplete) onComplete();
             return;
         }
 
@@ -221,13 +222,13 @@ const MapPage = () => {
         ? `${Math.floor(seconds / 60)} min ${seconds % 60} s` 
         : `${seconds} s`;
 
-    setRouteInfo({ 
-        distance: distanceStr, 
-        duration: durationStr 
-    }); 
-    
-    // Start animation
-    animate(result.visitedOrder, result.path);
+    // Start animation, show stats only AFTER completion
+    animate(result.visitedOrder, result.path, () => {
+        setRouteInfo({ 
+            distance: distanceStr, 
+            duration: durationStr 
+        }); 
+    });
   };
 
   // Compare function same as before...
