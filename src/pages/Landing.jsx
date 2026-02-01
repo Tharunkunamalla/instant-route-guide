@@ -91,27 +91,27 @@ const Landing = () => {
   const features = [
     {
       icon: Zap,
-      title: "Real-time Routing",
+      title: "Algorithm Visualization",
       description:
-        "Get instant route calculations with up-to-date traffic and road conditions.",
-    },
-    {
-      icon: Route,
-      title: "Dynamic Map Updates",
-      description:
-        "Watch your route update automatically as you change your destination.",
-    },
-    {
-      icon: Clock,
-      title: "Multiple Travel Modes",
-      description:
-        "Choose between driving, walking, or cycling for optimal route planning.",
+        "Watch complex pathfinding algorithms like Dijkstra, A*, and BFS work in real-time.",
     },
     {
       icon: MapPin,
-      title: "Accurate Locations",
+      title: "Real-World Data",
       description:
-        "Precise geocoding ensures you always find the exact locations you need.",
+        "Explore actual road networks from OpenStreetMap.",
+    },
+    {
+      icon: Clock,
+      title: "Performance Metrics",
+      description:
+        "Compare efficiency, distance, and execution time between different algorithms.",
+    },
+    {
+      icon: Route,
+      title: "Interactive Learning",
+      description:
+        "Control simulation speed, set custom endpoints, and understand graph theory concepts.",
     },
   ];
 
@@ -165,16 +165,15 @@ const Landing = () => {
             </motion.div>
 
             <h1 className="text-5xl md:text-7xl font-bold mb-6 leading-tight">
-              Find the{" "}
+              Visualize{" "}
               <span className="bg-gradient-to-r from-primary via-accent to-primary bg-clip-text text-transparent">
-                Best Routes
+                Pathfinding Algorithms
               </span>{" "}
-              Instantly!
+              on Real Maps
             </h1>
 
             <p className="text-xl md:text-2xl text-muted-foreground mb-8 max-w-2xl mx-auto leading-relaxed">
-              Discover optimal paths between any locations with real-time
-              traffic data and accurate distance calculations
+              An educational tool to visualize and compare how BFS, Dijkstra, and A* navigate real-world road networks.
             </p>
 
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
@@ -183,7 +182,7 @@ const Landing = () => {
                   size="lg"
                   className="text-lg px-8 transition-smooth hover:scale-105 shadow-elegant group"
                 >
-                  Get Started
+                  Start Visualizing
                   <ArrowRight className="ml-2 w-5 h-5 group-hover:translate-x-1 transition-smooth" />
                 </Button>
               </Link>
@@ -193,7 +192,7 @@ const Landing = () => {
                   variant="outline"
                   className="text-lg px-8 transition-smooth hover:scale-105 bg-background/50 backdrop-blur"
                 >
-                  Learn More
+                  About the Project
                 </Button>
               </Link>
             </div>
