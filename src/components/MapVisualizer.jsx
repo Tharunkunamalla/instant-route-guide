@@ -53,7 +53,7 @@ const VisitedNodesLayer = memo(({ visitedNodes, graph }) => {
                     <CircleMarker
                         key={id}
                         center={[node.lat, node.lng]}
-                        radius={3} // Small blue dots
+                        radius={2} // Small blue dots
                         pathOptions={{ color: "blue", fillColor: "blue", fillOpacity: 0.6, weight: 0 }}
                     />
                 );
@@ -119,6 +119,27 @@ const ControlPoints = ({ source, destination, graph, radius, onNodeClick }) => {
     );
 };
 
+// Helper to resize map when container dimension changes
+const MapResizer = ({ isExpanded }) => {
+  const map = useMap();
+  
+  useEffect(() => {
+    // Wait for transition to finish roughly (or trigger immediately and repeatedly)
+    // The layout transition is 500ms. We should check a few times or use ResizeObserver.
+    // Ideally, ResizeObserver on container, but pure hook approach:
+    const timeoutId = setTimeout(() => {
+        map.invalidateSize();
+    }, 550); // Just after transition
+
+    // Also trigger immediately just in case
+    map.invalidateSize();
+
+    return () => clearTimeout(timeoutId);
+  }, [map, isExpanded]);
+
+  return null;
+};
+
 const MapVisualizer = ({ 
   graph, 
   source, 
@@ -126,6 +147,7 @@ const MapVisualizer = ({
   path, 
   visitedNodes, 
   radius, 
+  isExpanded,
   onNodeClick, 
   onMapClick 
 }) => {
@@ -144,6 +166,7 @@ const MapVisualizer = ({
         url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
       />
       
+      <MapResizer isExpanded={isExpanded} />
       <MapEvents onMapClick={onMapClick} />
 
       <StaticEdges graph={graph} />

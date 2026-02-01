@@ -40,6 +40,32 @@ const MapPage = () => {
       const { lat, lng } = e.latlng;
 
       if (source !== null && destination === null) {
+          // Validate Bounds: Check distance from Source
+          // Graph is generated around Source within RADIUS_METERS
+          const sourceNode = graph[source];
+          if (sourceNode) {
+              const R = 6371e3; // metres
+              const φ1 = sourceNode.lat * Math.PI/180;
+              const φ2 = lat * Math.PI/180;
+              const Δφ = (lat - sourceNode.lat) * Math.PI/180;
+              const Δλ = (lng - sourceNode.lng) * Math.PI/180;
+
+              const a = Math.sin(Δφ/2) * Math.sin(Δφ/2) +
+                        Math.cos(φ1) * Math.cos(φ2) *
+                        Math.sin(Δλ/2) * Math.sin(Δλ/2);
+              const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+              const d = R * c;
+
+              if (d > RADIUS_METERS * 1.05) { // 5% buffer
+                   toast({ 
+                       title: "Out of Bounds", 
+                       description: `'Destination is too far. Please select within the ${RADIUS_METERS/1000}km radius circle.'`, 
+                       variant: "destructive" 
+                   });
+                   return;
+              }
+          }
+
           // Setting Destination
           const nearest = findNearestNode(lat, lng, graph);
           if (nearest && nearest.nodeId) {
@@ -127,9 +153,19 @@ const MapPage = () => {
             return;
         }
 
-        // Batch updates to avoid too many renders at very high speeds
-        const currentSpeed = speedRef.current;
-        const batchSize = currentSpeed > 100 ? Math.ceil(currentSpeed / 20) : 1; 
+        const currentDelay = speedRef.current;
+        
+        // If delay is 0 (Fastest), we need to batch heavily to process thousands of nodes quickly.
+        // If delay is > 0, we can process one by one or small batches.
+        let batchSize = 1;
+        
+        if (currentDelay === 0) {
+            // Very fast mode - render 50 nodes per frame
+            batchSize = 50; 
+        } else if (currentDelay <= 5) {
+            // Fast mode
+            batchSize = 5;
+        } 
         
         const batch = [];
         for (let j = 0; j < batchSize && i < visited.length; j++) {
@@ -139,14 +175,10 @@ const MapPage = () => {
 
         setVisitedNodes(prev => [...prev, ...batch]);
         
-        // Calculate delay: Higher speed = Lower delay
-        // Max Max (500) -> 4ms
-        // Min (10) -> 200ms
-        const delay = 2000 / currentSpeed;
-
+        // Use currentDelay directly as the timeout ms
         setTimeout(() => {
             requestAnimationFrame(step);
-        }, delay);
+        }, currentDelay);
     };
 
     step();
@@ -252,9 +284,17 @@ const MapPage = () => {
                       </Select>
                    </div>
 
-                   <div className="space-y-2">
-                       <label className="text-sm font-medium">Speed (ms): {speed}</label>
-                       <Slider value={[speed]} onValueChange={(v) => setSpeed(v[0])} min={10} max={500} step={10} />
+                   <div className="space-y-4">
+                       <label className="text-sm font-medium">Animation Delay: {speed} ms</label>
+                       <Slider value={[speed]} onValueChange={(v) => setSpeed(v[0])} min={0} max={500} step={10} className="cursor-pointer"/>
+                       <div className="flex justify-between text-xs text-muted-foreground">
+                           <span>Fast (0ms)</span>
+                           <span>Slow (500ms)</span>
+                       </div>
+                   </div>
+
+                   <div className="bg-yellow-100 dark:bg-yellow-900/30 border-l-4 border-yellow-500 p-2 text-xs text-yellow-700 dark:text-yellow-400">
+                       <strong>Note:</strong> Optimized for Telangana & Kerala regions for faster route finding.
                    </div>
 
                    <Button onClick={calculateRoute} className="w-full bg-blue-600 hover:bg-blue-700 text-white" disabled={isLoading || !destination}>
@@ -310,6 +350,7 @@ const MapPage = () => {
                 path={path}
                 visitedNodes={visitedNodes}
                 radius={RADIUS_METERS}
+                isExpanded={isExpanded}
                 onNodeClick={handleNodeClick}
                 onMapClick={handleMapClick}
              />
