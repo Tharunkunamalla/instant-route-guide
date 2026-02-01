@@ -1,5 +1,5 @@
 import { useEffect, useState, memo } from 'react';
-import { MapContainer, TileLayer, CircleMarker, Polyline, Popup, useMap, useMapEvents, Circle } from 'react-leaflet';
+import { MapContainer, TileLayer, CircleMarker, Polyline, Popup, useMap, useMapEvents, Circle, Marker } from 'react-leaflet';
 import L from 'leaflet';
 
 // Fix for default marker icon
@@ -9,6 +9,17 @@ L.Icon.Default.mergeOptions({
   iconUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-icon.png',
   shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-shadow.png',
 });
+
+const createPinIcon = (color) => L.divIcon({
+  className: 'custom-pin-icon',
+  html: `<svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="${color}" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="filter: drop-shadow(0px 2px 4px rgba(0,0,0,0.5));"><path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z"/><circle cx="12" cy="10" r="3" fill="white"/></svg>`,
+  iconSize: [32, 32],
+  iconAnchor: [16, 30], // Tip is at x=12, y=22 in 24x24 box. Scaled to 32x32 approx y=29.3. 30 is safe.
+  popupAnchor: [0, -32]
+});
+
+const bluePin = createPinIcon('#3b82f6');
+const redPin = createPinIcon('#ef4444');
 
 const MapEvents = ({ onMapClick }) => {
   useMapEvents({
@@ -87,14 +98,13 @@ const ControlPoints = ({ source, destination, graph, radius, onNodeClick }) => {
              {/* Source */}
              {source && graph[source] && (
                  <>
-                    <CircleMarker
-                        center={[graph[source].lat, graph[source].lng]}
-                        radius={8}
-                        pathOptions={{ color: "green", fillColor: "green", fillOpacity: 1 }}
+                    <Marker
+                        position={[graph[source].lat, graph[source].lng]}
+                        icon={bluePin}
                         eventHandlers={{ click: (e) => { L.DomEvent.stopPropagation(e); onNodeClick(source); }}}
                     >
                          <Popup>Source: {source}</Popup>
-                    </CircleMarker>
+                    </Marker>
                     <Circle 
                         center={[graph[source].lat, graph[source].lng]}
                         radius={radius}
@@ -106,14 +116,13 @@ const ControlPoints = ({ source, destination, graph, radius, onNodeClick }) => {
              
              {/* Destination */}
              {destination && graph[destination] && (
-                 <CircleMarker
-                    center={[graph[destination].lat, graph[destination].lng]}
-                    radius={8}
-                    pathOptions={{ color: "red", fillColor: "red", fillOpacity: 1 }}
+                 <Marker
+                    position={[graph[destination].lat, graph[destination].lng]}
+                    icon={redPin}
                     eventHandlers={{ click: (e) => { L.DomEvent.stopPropagation(e); onNodeClick(destination); }}}
                 >
                      <Popup>Destination: {destination}</Popup>
-                </CircleMarker>
+                </Marker>
              )}
         </>
     );
@@ -159,6 +168,7 @@ const MapVisualizer = ({
       center={center} 
       zoom={zoom} 
       scrollWheelZoom={true} 
+      preferCanvas={true}
       style={{ height: "100%", width: "100%", borderRadius: "0.5rem" }}
     >
       <TileLayer

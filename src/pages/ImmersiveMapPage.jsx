@@ -6,11 +6,11 @@ import { Slider } from "@/components/ui/slider";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Loader2, Play, RotateCcw, Maximize2, Minimize2, Map as MapIcon, ArrowLeft, Navigation } from "lucide-react";
-import MapVisualizer from '../components/MapVisualizer';
-import { buildGraphFromOSM, fetchRoadNetwork, findNearestNode } from '../utils/graphUtils';
-import { bfs } from '../algorithms/bfs';
-import { dijkstra } from '../algorithms/dijkstra';
-import { astar } from '../algorithms/astar';
+import MapVisualizer from '@/components/MapVisualizer';
+import { buildGraphFromOSM, fetchRoadNetwork, findNearestNode } from '@/lib/osm';
+import { bfs } from '@/algorithms/bfs';
+import { dijkstra } from '@/algorithms/dijkstra';
+import { astar } from '@/algorithms/astar';
 import { useToast } from "@/components/ui/use-toast";
 import { motion, AnimatePresence } from "framer-motion";
 import { Link } from 'react-router-dom';
@@ -43,12 +43,21 @@ const ImmersiveMapPage = () => {
     return () => window.removeEventListener('region-update', handleRegionUpdate);
   }, []);
 
-  const handleMapClick = async (lat, lng) => {
+  const handleMapClick = async (arg1, arg2) => {
+      let lat, lng;
+      if (arg1 && arg1.latlng) {
+          lat = arg1.latlng.lat;
+          lng = arg1.latlng.lng;
+      } else {
+          lat = arg1;
+          lng = arg2;
+      }
+
       if (source !== null && destination !== null) return; 
 
-      if (Object.keys(graph).length > 0) {
+      if (graph && Object.keys(graph).length > 0) {
           // Check bounds
-          if (graph && Object.keys(graph).length > 0) {
+          if (Object.keys(graph).length > 0) {
               const centerNode = Object.values(graph)[0]; 
               const dist = Math.sqrt(Math.pow(lat - centerNode.lat, 2) + Math.pow(lng - centerNode.lng, 2));
                // Approx check (very rough lat/lng dist)
@@ -272,33 +281,37 @@ const ImmersiveMapPage = () => {
                  </div>
              </div>
 
-             {/* Locations */}
-             <div className="space-y-3">
-                  <div className="relative">
-                      <div className="absolute left-3 top-3 w-4 h-[calc(100%-24px)] border-l-2 border-dashed border-zinc-700/50 ml-1"></div>
-                      
-                      <div className="space-y-3">
-                          <div className="relative">
-                               <div className="absolute left-0 top-1/2 -translate-y-1/2 w-3 h-3 rounded-full border-2 border-blue-500 bg-zinc-950 z-10"></div>
-                               <Input 
-                                  value={source !== null ? `Lat: ${graph[source]?.lat.toFixed(4)}...` : ''} 
-                                  readOnly 
-                                  placeholder="Click map to set Start" 
-                                  className="pl-8 bg-zinc-900 border-zinc-700 text-zinc-300 placeholder:text-zinc-600"
-                               />
-                          </div>
-                          <div className="relative">
-                               <div className="absolute left-0 top-1/2 -translate-y-1/2 w-3 h-3 rounded-full border-2 border-red-500 bg-zinc-950 z-10"></div>
-                               <Input 
-                                  value={destination !== null ? `Node: ${destination}` : ''} 
-                                  readOnly 
-                                  placeholder="Select Destination" 
-                                  className="pl-8 bg-zinc-900 border-zinc-700 text-zinc-300 placeholder:text-zinc-600"
-                               />
-                          </div>
-                      </div>
-                  </div>
-             </div>
+              {/* Locations */}
+              <div className="space-y-3">
+                   <div className="relative">
+                       <div className="absolute left-3 top-3 w-4 h-[calc(100%-24px)] border-l-2 border-dashed border-zinc-700/50 ml-1"></div>
+                       
+                       <div className="space-y-3">
+                           <div className="relative">
+                                <div className="absolute left-0 top-1/2 -translate-y-1/2 z-10 bg-zinc-950">
+                                    <MapIcon className="w-4 h-4 text-blue-500 fill-blue-500/20" />
+                                </div>
+                                <Input 
+                                   value={source !== null ? `Lat: ${graph[source]?.lat.toFixed(4)}...` : ''} 
+                                   readOnly 
+                                   placeholder="Click map to set Start" 
+                                   className="pl-8 bg-zinc-900 border-zinc-700 text-zinc-300 placeholder:text-zinc-600"
+                                />
+                           </div>
+                           <div className="relative">
+                                <div className="absolute left-0 top-1/2 -translate-y-1/2 z-10 bg-zinc-950">
+                                    <MapIcon className="w-4 h-4 text-red-500 fill-red-500/20" />
+                                </div>
+                                <Input 
+                                   value={destination !== null ? `Node: ${destination}` : ''} 
+                                   readOnly 
+                                   placeholder="Select Destination" 
+                                   className="pl-8 bg-zinc-900 border-zinc-700 text-zinc-300 placeholder:text-zinc-600"
+                                />
+                           </div>
+                       </div>
+                   </div>
+              </div>
 
          </div>
 
