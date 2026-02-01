@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import { motion } from "framer-motion";
 import { MapPin, Navigation, Clock, Loader2, Search, Play, Maximize2, Minimize2, RotateCcw } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -107,19 +107,49 @@ const MapPage = () => {
     toast({ title: "Reset", description: "Map cleared. Click to set new source." });
   };
 
+  // Speed Ref for dynamic updates inside animation loop
+  const speedRef = useRef(speed);
+  useEffect(() => {
+     speedRef.current = speed;
+  }, [speed]);
+
   const animate = async (visited, finalPath) => {
     setIsLoading(true);
     setVisitedNodes([]);
     setPath([]);
     
-    // Animate visited
-    for (let i = 0; i < visited.length; i++) {
-        // Optimization: Batch updates if speed is high
-        setVisitedNodes(prev => [...prev, visited[i]]);
-        if (speed < 100) await new Promise(r => setTimeout(r, 2000 / speed));
-    }
-    setPath(finalPath);
-    setIsLoading(false);
+    let i = 0;
+    
+    const step = () => {
+        if (i >= visited.length) {
+            setPath(finalPath);
+            setIsLoading(false);
+            return;
+        }
+
+        // Batch updates to avoid too many renders at very high speeds
+        const currentSpeed = speedRef.current;
+        const batchSize = currentSpeed > 100 ? Math.ceil(currentSpeed / 20) : 1; 
+        
+        const batch = [];
+        for (let j = 0; j < batchSize && i < visited.length; j++) {
+            batch.push(visited[i]);
+            i++;
+        }
+
+        setVisitedNodes(prev => [...prev, ...batch]);
+        
+        // Calculate delay: Higher speed = Lower delay
+        // Max Max (500) -> 4ms
+        // Min (10) -> 200ms
+        const delay = 2000 / currentSpeed;
+
+        setTimeout(() => {
+            requestAnimationFrame(step);
+        }, delay);
+    };
+
+    step();
   };
 
   const calculateRoute = () => {
@@ -143,7 +173,9 @@ const MapPage = () => {
         return;
     }
 
-    setRouteInfo({ distance: Math.round(result.distance) + " m", duration: Math.round(result.distance / 10) + " s" }); // Fake duration
+    setRouteInfo({ distance: Math.round(result.distance) + " m", duration: Math.round(result.distance / 10) + " s" }); 
+    
+    // Start animation
     animate(result.visitedOrder, result.path);
   };
 
