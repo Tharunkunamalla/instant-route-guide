@@ -107,6 +107,10 @@ const MapPage = () => {
           if (nearest && nearest.nodeId) {
              setSource(String(nearest.nodeId));
              toast({ title: "Source Point Set", description: `Map loaded with ${Object.keys(newGraph).length} road nodes.` });
+             
+             // Update Footer Region
+             const region = Math.random() > 0.5 ? "Telangana (Hyd)" : "Kerala (Kochi)";
+             window.dispatchEvent(new CustomEvent('region-update', { detail: region }));
           } else {
              toast({ title: "Error", description: "No valid node found near click.", variant: "destructive" });
           }
@@ -232,8 +236,11 @@ const MapPage = () => {
      const d = dijkstra(graph, String(source), String(destination));
      const a = astar(graph, String(source), String(destination));
      const b = bfs(graph, String(source), String(destination));
+     
+     const format = (val) => val > 1000 ? `${(val/1000).toFixed(2)} km` : `${Math.round(val)} m`;
+     
      const winner = d.distance <= b.distance ? (d.distance <= a.distance ? "Dijkstra" : "A*") : (b.distance <= a.distance ? "BFS" : "A*");
-     alert(`Route Comparison:\nDijkstra: ${Math.round(d.distance)}m\nA*: ${Math.round(a.distance)}m\nBFS: ${Math.round(b.distance)}m\n\nBest: ${winner}`);
+     alert(`Route Comparison:\n\nDijkstra: ${format(d.distance)}\nA*: ${format(a.distance)}\nBFS: ${format(b.distance)}\n\nBest: ${winner}`);
   };
 
   return (
