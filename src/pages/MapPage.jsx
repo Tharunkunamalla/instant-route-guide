@@ -2,6 +2,7 @@ import { useState, useEffect, useCallback, useRef } from "react";
 import { motion } from "framer-motion";
 import { MapPin, Navigation, Clock, Loader2, Search, Play, Maximize2, Minimize2, RotateCcw } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { Link } from "react-router-dom";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useToast } from "@/hooks/use-toast";
@@ -59,7 +60,7 @@ const MapPage = () => {
               if (d > RADIUS_METERS * 1.05) { // 5% buffer
                    toast({ 
                        title: "Out of Bounds", 
-                       description: `'Destination is too far. Please select within the ${RADIUS_METERS/1000}km radius circle.'`, 
+                       description: `'Destination is too far. Please select within the radius circle.'`, 
                        variant: "destructive" 
                    });
                    return;
@@ -274,9 +275,16 @@ const MapPage = () => {
                 <CardHeader>
                   <CardTitle className="flex justify-between items-center">
                     Controls
-                    <Button variant="ghost" size="icon" onClick={handleReset} title="Reset All">
-                        <RotateCcw className="h-4 w-4" />
-                    </Button>
+                    <div className="flex gap-2">
+                        <Link to="/immersive">
+                             <Button variant="outline" size="icon" title="Switch to Immersive View">
+                                 <Maximize2 className="h-4 w-4" />
+                             </Button>
+                        </Link>
+                        <Button variant="ghost" size="icon" onClick={handleReset} title="Reset All">
+                            <RotateCcw className="h-4 w-4" />
+                        </Button>
+                    </div>
                   </CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-6 flex-1 overflow-y-auto min-h-0 scrollbar-thin scrollbar-thumb-secondary/50 scrollbar-track-transparent pr-2">
