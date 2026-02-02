@@ -4,15 +4,12 @@ import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Slider } from "@/components/ui/slider";
 import { Input } from "@/components/ui/input";
-import { Badge } from "@/components/ui/badge";
 import { Loader2, Play, RotateCcw, Maximize2, Minimize2, Map as MapIcon, ArrowLeft, Navigation } from "lucide-react";
 import MapVisualizer from '@/components/MapVisualizer';
 import { buildGraphFromOSM, fetchRoadNetwork, findNearestNode } from '@/lib/osm';
-import { bfs } from '@/algorithms/bfs';
 import { dijkstra } from '@/algorithms/dijkstra';
 import { astar } from '@/algorithms/astar';
 import { useToast } from "@/components/ui/use-toast";
-import { motion, AnimatePresence } from "framer-motion";
 import { Link } from 'react-router-dom';
 
 const RADIUS_METERS = 3000; // 3km radius
