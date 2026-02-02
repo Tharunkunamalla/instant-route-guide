@@ -168,7 +168,7 @@ const ControlSidebar = React.memo(({
                     value={[speed]} 
                     onValueChange={(v) => setSpeed(v[0])} 
                     min={0} 
-                    max={500} 
+                    max={300} 
                     step={10} 
                     className="cursor-pointer py-2"
                  />
