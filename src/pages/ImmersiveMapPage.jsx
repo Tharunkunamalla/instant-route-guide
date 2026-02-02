@@ -49,6 +49,23 @@ const ControlSidebar = React.memo(({
          
          {/* Header */}
          <div className="p-8 border-b border-white/5 bg-zinc-900/20">
+             {/* Custom Scrollbar Styles for this component only */}
+             <style>{`
+                 .custom-scrollbar::-webkit-scrollbar {
+                   width: 6px;
+                 }
+                 .custom-scrollbar::-webkit-scrollbar-track {
+                   background: transparent;
+                 }
+                 .custom-scrollbar::-webkit-scrollbar-thumb {
+                   background-color: rgba(255, 255, 255, 0.1); /* Subtle visibility */
+                   border-radius: 20px;
+                   transition: background-color 0.3s;
+                 }
+                 .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+                   background-color: rgba(255, 255, 255, 0.3); /* Brighter on hover */
+                 }
+             `}</style>
              <div className="flex items-center gap-4 mb-1">
                 <div className="p-2.5 bg-gradient-to-br from-blue-600 to-indigo-600 rounded-xl shadow-lg shadow-blue-500/20 ring-1 ring-white/10">
                     <MapIcon className="w-6 h-6 text-white" />
@@ -70,7 +87,7 @@ const ControlSidebar = React.memo(({
          </div>
 
          {/* Scrollable Content */}
-         <div className="flex-1 overflow-y-auto px-8 py-6 space-y-8 scrollbar-none hover:scrollbar-thin scrollbar-thumb-zinc-800 scrollbar-track-transparent">
+         <div className="flex-1 overflow-y-auto px-8 py-6 space-y-8 custom-scrollbar">
              
              {/* Status Grid */}
              <div className="grid grid-cols-2 gap-3">

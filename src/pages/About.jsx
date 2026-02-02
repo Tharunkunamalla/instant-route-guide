@@ -36,7 +36,7 @@ const About = () => {
           className="text-center mb-16"
         >
           <h1 className="text-5xl md:text-6xl font-bold mb-6">
-            About <span className="bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent">SmartRoute</span>
+            About <span className="bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent">GraphPath</span>
           </h1>
           <p className="text-xl text-muted-foreground max-w-3xl mx-auto leading-relaxed">
             We're on a mission to revolutionize the way people find and navigate routes with cutting-edge technology
@@ -55,14 +55,14 @@ const About = () => {
               <h2 className="text-3xl font-bold mb-6">Our Story</h2>
               <div className="space-y-4 text-lg text-muted-foreground">
                 <p>
-                  SmartRoute was born from a simple frustration: finding the best route between two points
+                  GraphPath was born from a simple frustration: finding the best route between two points
                   shouldn't be complicated. We noticed that while many navigation tools exist, few truly
                   focus on simplicity and speed.
                 </p>
                 <p>
                   Our team of developers and designers came together to create a solution that combines
                   powerful routing algorithms with an intuitive, beautiful interface. The result is
-                  SmartRoute - a tool that anyone can use, anywhere, anytime.
+                  GraphPath - a tool that anyone can use, anywhere, anytime.
                 </p>
               </div>
             </CardContent>
@@ -153,7 +153,7 @@ const About = () => {
                 creating exceptional user experiences.
               </p>
               <div className="text-black/80">
-                Contact us at <span className="font-semibold text-blue-500">careers@smartroute.com</span>
+                Contact us at <span className="font-semibold text-blue-500">careers@GraphPath.com</span>
               </div>
             </CardContent>
           </Card>
