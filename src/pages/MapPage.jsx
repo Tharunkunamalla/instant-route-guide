@@ -398,10 +398,10 @@ const MapPage = () => {
 
                    <div className="space-y-4">
                        <label className="text-sm font-medium">Animation Delay: {speed} ms</label>
-                       <Slider value={[speed]} onValueChange={(v) => setSpeed(v[0])} min={0} max={500} step={10} className="cursor-pointer"/>
+                       <Slider value={[speed]} onValueChange={(v) => setSpeed(v[0])} min={0} max={300} step={10} className="cursor-pointer"/>
                        <div className="flex justify-between text-xs text-muted-foreground">
                            <span>Fast (0ms)</span>
-                           <span>Slow (500ms)</span>
+                           <span>Slow (300ms)</span>
                        </div>
                    </div>
 
