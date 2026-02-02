@@ -51,10 +51,9 @@ const StaticEdges = memo(({ graph }) => {
     );
 }, (prev, next) => prev.graph === next.graph); // Custom comparison if needed, but strict equality of ref should suffice if immutable
 
-// 2. Dynamic Visited Nodes Layer - Renders when visitedNodes changes
-// 2. Dynamic Visited Nodes Layer - Renders when visitedNodes changes
+// 2. Dynamic Visited Nodes Layer - Renders when visitedCount changes
 // Optimized to avoid React render overhead for thousands of nodes
-const VisitedNodesLayer = memo(({ visitedNodes, graph }) => {
+const VisitedNodesLayer = memo(({ visitedOrder, visitedCount, graph }) => {
     const map = useMap();
     const layerGroupRef = React.useRef(null);
     const lastCountRef = React.useRef(0);
@@ -64,44 +63,43 @@ const VisitedNodesLayer = memo(({ visitedNodes, graph }) => {
             layerGroupRef.current = L.layerGroup().addTo(map);
         }
 
-        // If visitedNodes was reset (emptied or new search started)
-        if (!visitedNodes || visitedNodes.length === 0) {
+        // If visitedCount reset to 0
+        if (visitedCount === 0) {
             layerGroupRef.current.clearLayers();
             lastCountRef.current = 0;
             return;
         }
 
-        // If we have fewer nodes than before, it means a reset happened that wasn't caught by length=0
-        // (e.g. user clicked calculate again immediately). Clear and redraw.
-        if (visitedNodes.length < lastCountRef.current) {
+        // If something weird happened and we went backwards
+        if (visitedCount < lastCountRef.current) {
             layerGroupRef.current.clearLayers();
             lastCountRef.current = 0;
         }
 
         // Add only NEW nodes
         const start = lastCountRef.current;
-        const end = visitedNodes.length;
+        const end = visitedCount;
 
-        if (start < end) {
-            const batch = visitedNodes.slice(start, end);
+        if (start < end && visitedOrder) {
             
-            // Create a small fragment of markers (Leaflet handles this internally but batching helps)
-            batch.forEach(id => {
+            // Just iterate indices - no array copying!
+            for (let i = start; i < end; i++) {
+                 const id = visitedOrder[i];
                  const node = graph[id];
                  if (node) {
                      L.circleMarker([node.lat, node.lng], {
                          radius: 3, 
                          color: "blue",
-                         fillColor: "#3b82f6",
-                         fillOpacity: 0.8,
+                         fillColor: "#045ff3ff", // Original blue color
+                         fillOpacity: 1,
                          weight: 0,
-                         interactive: false // significant perf boost
+                         interactive: false 
                      }).addTo(layerGroupRef.current);
                  }
-            });
+            }
             lastCountRef.current = end;
         }
-    }, [visitedNodes, graph, map]);
+    }, [visitedCount, visitedOrder, graph, map]);
     
     // Cleanup on unmount
      useEffect(() => {
@@ -222,7 +220,8 @@ const MapVisualizer = ({
   destination, 
   path,
   zoomPath, // New prop for immediate zooming
-  visitedNodes, 
+  visitedOrder,
+  visitedCount, 
   radius, 
   isExpanded,
   onNodeClick, 
@@ -249,7 +248,7 @@ const MapVisualizer = ({
       <MapEvents onMapClick={onMapClick} />
 
       <StaticEdges graph={graph} />
-      <VisitedNodesLayer visitedNodes={visitedNodes} graph={graph} />
+      <VisitedNodesLayer visitedOrder={visitedOrder} visitedCount={visitedCount} graph={graph} />
       <PathLayer path={path} graph={graph} />
       
       <ControlPoints 

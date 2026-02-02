@@ -14,177 +14,23 @@ import { Link } from 'react-router-dom';
 
 const RADIUS_METERS = 3000; // 3km radius
 
-const ImmersiveMapPage = () => {
-  const [graph, setGraph] = useState({});
-  const [source, setSource] = useState(null);
-  const [destination, setDestination] = useState(null);
-  const [algorithm, setAlgorithm] = useState("Dijkstra");
-  const [path, setPath] = useState([]);
-  const [visitedNodes, setVisitedNodes] = useState([]);
-  const [isGraphLoading, setIsGraphLoading] = useState(false);
-  const [isLoading, setIsLoading] = useState(false);
-  const [isCalculating, setIsCalculating] = useState(false);
-  const [speed, setSpeed] = useState(50);
-  const [routeInfo, setRouteInfo] = useState(null);
-  const { toast } = useToast();
-
-  const loadGraph = async (lat, lng) => {
-      setIsGraphLoading(true);
-      try {
-          toast({ title: "Loading Region", description: "Fetching road network..." });
-          const osmData = await fetchRoadNetwork(lat, lng, RADIUS_METERS);
-          if (!osmData) { setIsGraphLoading(false); return null; }
-
-          const newGraph = buildGraphFromOSM(osmData);
-          if (Object.keys(newGraph).length === 0) {
-              setIsGraphLoading(false);
-              return null;
-          }
-          setGraph(newGraph);
-          window.dispatchEvent(new CustomEvent('region-update', { detail: "Telangana (Hyd)" }));
-          return newGraph;
-      } catch (err) {
-          console.error(err);
-          return null;
-      } finally {
-          setIsGraphLoading(false);
-      }
-  };
-
-  // Load Map Data on Mount
-  useEffect(() => {
-    // Listen for custom region updates if we want to sync
-    const handleRegionUpdate = (e) => {
-        // Just purely for visual feedback if needed
-    };
-    window.addEventListener('region-update', handleRegionUpdate);
-    return () => window.removeEventListener('region-update', handleRegionUpdate);
-  }, []);
-
-  const handleMapClick = async (arg1, arg2) => {
-      let lat, lng;
-      if (arg1 && arg1.latlng) {
-          lat = arg1.latlng.lat;
-          lng = arg1.latlng.lng;
-      } else {
-          lat = arg1;
-          lng = arg2;
-      }
-
-      if (source !== null && destination !== null) return; 
-
-      let currentGraph = graph;
-
-      // If graph is empty, load it first
-      if (!currentGraph || Object.keys(currentGraph).length === 0) {
-           const newGraph = await loadGraph(lat, lng);
-           if (!newGraph) return;
-           currentGraph = newGraph;
-      } else {
-          // Check bounds logic
-          const centerNode = Object.values(currentGraph)[0]; 
-          const dist = Math.sqrt(Math.pow(lat - centerNode.lat, 2) + Math.pow(lng - centerNode.lng, 2));
-           if (dist > 0.05) { 
-                toast({ 
-                    title: "Out of Bounds", 
-                    description: 'Please click within the loaded active region.', 
-                    variant: "destructive" 
-                });
-                return;
-           }
-      }
-
-      // Setting Source or Destination
-      const nearest = findNearestNode(lat, lng, currentGraph);
-      if (nearest && nearest.nodeId) {
-         if (source === null) {
-             setSource(String(nearest.nodeId));
-             toast({ title: "Source Set", description: "Now select a destination." });
-         } else {
-             setDestination(String(nearest.nodeId));
-             toast({ title: "Destination Set", description: "Ready to visualize." });
-         }
-      }
-  };
-
-  const handleReset = () => {
-    setGraph({});
-    setSource(null);
-    setDestination(null);
-    setPath([]);
-    setZoomPath([]);
-    setVisitedNodes([]);
-    setRouteInfo(null);
-    toast({ title: "Reset", description: "Map cleared. Click to set new source." });
-  };
-
-  const speedRef = useRef(speed);
-  useEffect(() => { speedRef.current = speed; }, [speed]);
-
-  const animate = async (visited, finalPath, onComplete) => {
-    setIsLoading(true);
-    setVisitedNodes([]);
-    setPath([]);
-    
-    let i = 0;
-    const step = () => {
-        if (i >= visited.length) {
-            setPath(finalPath);
-            setIsLoading(false);
-            if (onComplete) onComplete();
-            return;
-        }
-
-        const currentDelay = speedRef.current;
-        let batchSize = currentDelay === 0 ? 50 : (currentDelay <= 5 ? 5 : 1);
-        
-        const batch = [];
-        for (let j = 0; j < batchSize && i < visited.length; j++) {
-            batch.push(visited[i]);
-            i++;
-        }
-        setVisitedNodes(prev => [...prev, ...batch]);
-        setTimeout(() => requestAnimationFrame(step), currentDelay);
-    };
-    step();
-  };
-
-  const calculateRoute = () => {
-    if (source === null || destination === null) return;
-
-    setIsCalculating(true);
-
-    // Use setTimeout to allow UI to render "Calculating..." state before heavy operation
-    setTimeout(() => {
-        let result;
-        if (algorithm === "Dijkstra") result = dijkstra(graph, String(source), String(destination));
-        else if (algorithm === "A*") result = astar(graph, String(source), String(destination));
-        else result = bfs(graph, String(source), String(destination));
-
-        if (!result || result.path.length === 0) {
-            toast({ title: "No Path", description: "No route found.", variant: "destructive" });
-            setIsCalculating(false);
-            return;
-        }
-
-        const d = result.distance;
-        const distanceStr = d > 1000 ? `${(d / 1000).toFixed(2)} km` : `${Math.round(d)} m`;
-        const seconds = Math.round(d / 10);
-        const durationStr = seconds > 60 ? `${Math.floor(seconds / 60)} min ${seconds % 60} s` : `${seconds} s`;
-
-        setIsCalculating(false);
-        setZoomPath(result.path); // Zoom immediately
-
-        animate(result.visitedOrder, result.path, () => {
-            setRouteInfo({ distance: distanceStr, duration: durationStr });
-        });
-    }, 100);
-  };
-
-  return (
-    <div className="flex h-screen w-screen overflow-hidden bg-background text-foreground">
-      
-      {/* Sidebar Controls */}
+// Memoized Sidebar to prevent re-renders during animation
+const ControlSidebar = React.memo(({ 
+    isGraphLoading, 
+    graph, 
+    routeInfo, 
+    algorithm, 
+    setAlgorithm, 
+    speed, 
+    setSpeed, 
+    source, 
+    destination, 
+    isLoading, 
+    isCalculating, 
+    calculateRoute, 
+    handleReset 
+}) => {
+    return (
       <aside className="w-[400px] flex-shrink-0 bg-zinc-950/95 backdrop-blur border-r border-zinc-800 flex flex-col z-20 shadow-2xl">
          
          {/* Header */}
@@ -350,6 +196,198 @@ const ImmersiveMapPage = () => {
          </div>
 
       </aside>
+    )
+});
+
+const ImmersiveMapPage = () => {
+  const [source, setSource] = useState(null);
+  const [destination, setDestination] = useState(null);
+  const [algorithm, setAlgorithm] = useState("Dijkstra");
+  const [path, setPath] = useState([]);
+  const [visitedNodes, setVisitedNodes] = useState([]); // Deprecated in favor of visitedOrder/visitedCount
+  const [visitedOrder, setVisitedOrder] = useState([]);
+  const [visitedCount, setVisitedCount] = useState(0);
+  const [isGraphLoading, setIsGraphLoading] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
+  const [isCalculating, setIsCalculating] = useState(false);
+  const [speed, setSpeed] = useState(50);
+  const [routeInfo, setRouteInfo] = useState(null);
+  const { toast } = useToast();
+
+  const loadGraph = async (lat, lng) => {
+      setIsGraphLoading(true);
+      try {
+          toast({ title: "Loading Region", description: "Fetching road network..." });
+          const osmData = await fetchRoadNetwork(lat, lng, RADIUS_METERS);
+          if (!osmData) { setIsGraphLoading(false); return null; }
+
+          const newGraph = buildGraphFromOSM(osmData);
+          if (Object.keys(newGraph).length === 0) {
+              setIsGraphLoading(false);
+              return null;
+          }
+          setGraph(newGraph);
+          window.dispatchEvent(new CustomEvent('region-update', { detail: "Telangana (Hyd)" }));
+          return newGraph;
+      } catch (err) {
+          console.error(err);
+          return null;
+      } finally {
+          setIsGraphLoading(false);
+      }
+  };
+
+  // Load Map Data on Mount
+  useEffect(() => {
+    // Listen for custom region updates if we want to sync
+    const handleRegionUpdate = (e) => {
+        // Just purely for visual feedback if needed
+    };
+    window.addEventListener('region-update', handleRegionUpdate);
+    return () => window.removeEventListener('region-update', handleRegionUpdate);
+  }, []);
+
+  const handleMapClick = async (arg1, arg2) => {
+      let lat, lng;
+      if (arg1 && arg1.latlng) {
+          lat = arg1.latlng.lat;
+          lng = arg1.latlng.lng;
+      } else {
+          lat = arg1;
+          lng = arg2;
+      }
+
+      if (source !== null && destination !== null) return; 
+
+      let currentGraph = graph;
+
+      // If graph is empty, load it first
+      if (!currentGraph || Object.keys(currentGraph).length === 0) {
+           const newGraph = await loadGraph(lat, lng);
+           if (!newGraph) return;
+           currentGraph = newGraph;
+      } else {
+          // Check bounds logic
+          const centerNode = Object.values(currentGraph)[0]; 
+          const dist = Math.sqrt(Math.pow(lat - centerNode.lat, 2) + Math.pow(lng - centerNode.lng, 2));
+           if (dist > 0.05) { 
+                toast({ 
+                    title: "Out of Bounds", 
+                    description: 'Please click within the loaded active region.', 
+                    variant: "destructive" 
+                });
+                return;
+           }
+      }
+
+      // Setting Source or Destination
+      const nearest = findNearestNode(lat, lng, currentGraph);
+      if (nearest && nearest.nodeId) {
+         if (source === null) {
+             setSource(String(nearest.nodeId));
+             toast({ title: "Source Set", description: "Now select a destination." });
+         } else {
+             setDestination(String(nearest.nodeId));
+             toast({ title: "Destination Set", description: "Ready to visualize." });
+         }
+      }
+  };
+
+  const handleReset = () => {
+    setGraph({});
+    setSource(null);
+    setDestination(null);
+    setPath([]);
+    setZoomPath([]);
+    setVisitedNodes([]);
+    setVisitedOrder([]);
+    setVisitedCount(0);
+    setRouteInfo(null);
+    toast({ title: "Reset", description: "Map cleared. Click to set new source." });
+  };
+
+  const speedRef = useRef(speed);
+  useEffect(() => { speedRef.current = speed; }, [speed]);
+
+  const animate = async (visited, finalPath, onComplete) => {
+    setIsLoading(true);
+    // Store full order, animate count
+    setVisitedOrder(visited);
+    setVisitedCount(0);
+    setPath([]);
+    
+    let i = 0;
+    const total = visited.length;
+
+    const step = () => {
+        if (i >= total) {
+            setPath(finalPath);
+            setIsLoading(false);
+            if (onComplete) onComplete();
+            return;
+        }
+
+        const currentDelay = speedRef.current;
+        let batchSize = currentDelay === 0 ? 100 : (currentDelay <= 5 ? 10 : 1);
+        
+        i = Math.min(i + batchSize, total);
+        setVisitedCount(i);
+
+        setTimeout(() => requestAnimationFrame(step), currentDelay);
+    };
+    step();
+  };
+
+  const calculateRoute = () => {
+    if (source === null || destination === null) return;
+
+    setIsCalculating(true);
+
+    // Use setTimeout to allow UI to render "Calculating..." state before heavy operation
+    setTimeout(() => {
+        let result;
+        if (algorithm === "Dijkstra") result = dijkstra(graph, String(source), String(destination));
+        else if (algorithm === "A*") result = astar(graph, String(source), String(destination));
+        else result = bfs(graph, String(source), String(destination));
+
+        if (!result || result.path.length === 0) {
+            toast({ title: "No Path", description: "No route found.", variant: "destructive" });
+            setIsCalculating(false);
+            return;
+        }
+
+        const d = result.distance;
+        const distanceStr = d > 1000 ? `${(d / 1000).toFixed(2)} km` : `${Math.round(d)} m`;
+        const seconds = Math.round(d / 10);
+        const durationStr = seconds > 60 ? `${Math.floor(seconds / 60)} min ${seconds % 60} s` : `${seconds} s`;
+
+        setIsCalculating(false);
+        setZoomPath(result.path); // Zoom immediately
+
+        animate(result.visitedOrder, result.path, () => {
+            setRouteInfo({ distance: distanceStr, duration: durationStr });
+        });
+    }, 100);
+  };
+
+  return (
+    <div className="flex h-screen w-screen overflow-hidden bg-background text-foreground">
+      
+      <ControlSidebar
+        isGraphLoading={isGraphLoading}
+        graph={graph}
+        routeInfo={routeInfo}
+        algorithm={algorithm}
+        setAlgorithm={setAlgorithm}
+        speed={speed}
+        setSpeed={setSpeed}
+        source={source}
+        destination={destination}
+        isLoading={isLoading}
+        isCalculating={isCalculating}
+        calculateRoute={calculateRoute}
+        handleReset={handleReset}
+      />
 
       {/* Main Map Area */}
       <main className="flex-1 relative h-full bg-zinc-900">
@@ -358,7 +396,8 @@ const ImmersiveMapPage = () => {
               source={source}
               destination={destination}
               path={path}
-              visitedNodes={visitedNodes}
+              visitedOrder={visitedOrder}
+              visitedCount={visitedCount}
               radius={RADIUS_METERS}
               isExpanded={true} 
               onNodeClick={() => {}} // handled via map click for source/dest mainly

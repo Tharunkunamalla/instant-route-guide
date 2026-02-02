@@ -34,7 +34,9 @@ const MapPage = () => {
   const [isGraphLoading, setIsGraphLoading] = useState(false);
   const [path, setPath] = useState([]);
   const [zoomPath, setZoomPath] = useState([]);
-  const [visitedNodes, setVisitedNodes] = useState([]);
+  const [visitedNodes, setVisitedNodes] = useState([]); // Deprecated, kept for back-compat if needed but unused in new visualizer
+  const [visitedOrder, setVisitedOrder] = useState([]);
+  const [visitedCount, setVisitedCount] = useState(0);
   const [routeInfo, setRouteInfo] = useState(null);
   const [isCalculating, setIsCalculating] = useState(false);
   const [isExpanded, setIsExpanded] = useState(false);
@@ -138,6 +140,8 @@ const MapPage = () => {
     setPath([]);
     setZoomPath([]);
     setVisitedNodes([]);
+    setVisitedOrder([]);
+    setVisitedCount(0);
     setRouteInfo(null);
     toast({ title: "Reset", description: "Map cleared. Click to set new source." });
   };
@@ -151,12 +155,15 @@ const MapPage = () => {
   const animate = async (visited, finalPath, onComplete) => {
     setIsLoading(true);
     setVisitedNodes([]);
+    setVisitedOrder(visited);
+    setVisitedCount(0);
     setPath([]);
     
     let i = 0;
+    const total = visited.length;
     
     const step = () => {
-        if (i >= visited.length) {
+        if (i >= total) {
             setPath(finalPath);
             setIsLoading(false);
             if (onComplete) onComplete();
@@ -164,31 +171,12 @@ const MapPage = () => {
         }
 
         const currentDelay = speedRef.current;
+        let batchSize = currentDelay === 0 ? 100 : (currentDelay <= 5 ? 10 : 1);
         
-        // If delay is 0 (Fastest), we need to batch heavily to process thousands of nodes quickly.
-        // If delay is > 0, we can process one by one or small batches.
-        let batchSize = 1;
-        
-        if (currentDelay === 0) {
-            // Very fast mode - render 50 nodes per frame
-            batchSize = 50; 
-        } else if (currentDelay <= 5) {
-            // Fast mode
-            batchSize = 5;
-        } 
-        
-        const batch = [];
-        for (let j = 0; j < batchSize && i < visited.length; j++) {
-            batch.push(visited[i]);
-            i++;
-        }
+        i = Math.min(i + batchSize, total);
+        setVisitedCount(i);
 
-        setVisitedNodes(prev => [...prev, ...batch]);
-        
-        // Use currentDelay directly as the timeout ms
-        setTimeout(() => {
-            requestAnimationFrame(step);
-        }, currentDelay);
+        setTimeout(() => requestAnimationFrame(step), currentDelay);
     };
 
     step();
@@ -392,7 +380,8 @@ const MapPage = () => {
                 source={source}
                 destination={destination}
                 path={path}
-                visitedNodes={visitedNodes}
+                visitedOrder={visitedOrder}
+                visitedCount={visitedCount}
                 radius={RADIUS_METERS}
                 isExpanded={isExpanded}
                 onNodeClick={handleNodeClick}
