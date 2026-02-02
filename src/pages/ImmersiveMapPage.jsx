@@ -205,6 +205,7 @@ const ImmersiveMapPage = () => {
   const [destination, setDestination] = useState(null);
   const [algorithm, setAlgorithm] = useState("Dijkstra");
   const [path, setPath] = useState([]);
+  const [zoomPath, setZoomPath] = useState([]); // Added missing state
   const [visitedNodes, setVisitedNodes] = useState([]); // Deprecated in favor of visitedOrder/visitedCount
   const [visitedOrder, setVisitedOrder] = useState([]);
   const [visitedCount, setVisitedCount] = useState(0);
@@ -311,6 +312,7 @@ const ImmersiveMapPage = () => {
   useEffect(() => { speedRef.current = speed; }, [speed]);
 
   const animate = async (visited, finalPath, onComplete) => {
+    console.log("Starting animation with:", visited.length, "nodes");
     setIsLoading(true);
     // Store full order, animate count
     setVisitedOrder(visited);
@@ -321,7 +323,9 @@ const ImmersiveMapPage = () => {
     const total = visited.length;
 
     const step = () => {
+        // console.log("Step:", i, "/", total); // verbose logging
         if (i >= total) {
+            console.log("Animation complete");
             setPath(finalPath);
             setIsLoading(false);
             if (onComplete) onComplete();
@@ -362,6 +366,13 @@ const ImmersiveMapPage = () => {
         const seconds = Math.round(d / 10);
         const durationStr = seconds > 60 ? `${Math.floor(seconds / 60)} min ${seconds % 60} s` : `${seconds} s`;
 
+        console.log("Algorithm Result:", { 
+            visitedCount: result.visitedOrder.length, 
+            pathLength: result.path.length,
+            firstVisited: result.visitedOrder[0],
+            lastVisited: result.visitedOrder[result.visitedOrder.length-1]
+        });
+
         setIsCalculating(false);
         setZoomPath(result.path); // Zoom immediately
 
@@ -397,6 +408,7 @@ const ImmersiveMapPage = () => {
               source={source}
               destination={destination}
               path={path}
+              zoomPath={zoomPath}
               visitedOrder={visitedOrder}
               visitedCount={visitedCount}
               radius={RADIUS_METERS}

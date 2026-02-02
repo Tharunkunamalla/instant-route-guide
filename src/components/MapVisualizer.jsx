@@ -65,8 +65,15 @@ const VisitedNodesLayer = memo(({ visitedOrder, visitedCount, graph }) => {
 
         // If visitedCount reset to 0
         if (visitedCount === 0) {
+            console.log("VisitedNodesLayer: Resetting layers");
             layerGroupRef.current.clearLayers();
             lastCountRef.current = 0;
+            return;
+        }
+
+        // Check if we actually have data to draw
+        if (!visitedOrder || visitedOrder.length === 0) {
+            console.log("VisitedNodesLayer: No visitedOrder data yet");
             return;
         }
 
@@ -80,24 +87,36 @@ const VisitedNodesLayer = memo(({ visitedOrder, visitedCount, graph }) => {
         const start = lastCountRef.current;
         const end = visitedCount;
 
-        if (start < end && visitedOrder) {
-            
+        console.log(`VisitedNodesLayer: Drawing from ${start} to ${end}. Total Order: ${visitedOrder.length}`);
+
+        if (start < end) {
+            let drawn = 0;
             // Just iterate indices - no array copying!
             for (let i = start; i < end; i++) {
+                 // Safety check: if our count is ahead of our data, stop.
+                 // This handles the race condition where count updates before order.
+                 if (i >= visitedOrder.length) break;
+
                  const id = visitedOrder[i];
                  const node = graph[id];
                  if (node) {
                      L.circleMarker([node.lat, node.lng], {
-                         radius: 3, 
+                         radius: 3,  // Slightly larger
                          color: "blue",
-                         fillColor: "#045ff3ff", // Original blue color
+                         fillColor: "#0959d9ff", // Reverting to nice blue
                          fillOpacity: 1,
                          weight: 0,
                          interactive: false 
                      }).addTo(layerGroupRef.current);
+                     drawn++;
+                 } else {
+                     console.warn(`Node ${id} not found in graph!`);
                  }
             }
-            lastCountRef.current = end;
+            // Only advance if we actually had valid data to cover up to 'end'
+            // If visitedOrder was shorter than 'end', we only drew up to visitedOrder.length
+            lastCountRef.current = Math.min(end, visitedOrder.length);
+            console.log(`VisitedNodesLayer: Drawn ${drawn} nodes.`);
         }
     }, [visitedCount, visitedOrder, graph, map]);
     
