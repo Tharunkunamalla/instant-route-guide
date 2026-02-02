@@ -29,19 +29,19 @@ const Contact = () => {
     {
       icon: Mail,
       title: "Email",
-      content: "support..smartroute.com",
-      link: "mailto:support..smartroute.com",
+      content: "support.graph@gmail.com",
+      link: "mailto:tharunkunamalla7@gmail.com",
     },
     {
       icon: Phone,
       title: "Phone",
-      content: "+1 (555) 123-4567",
-      link: "tel:+15551234567",
+      content: "+91 1234567890",
+      link: "tel:+91 1234567890",
     },
     {
       icon: MapPin,
       title: "Office",
-      content: "123 Navigation St, Tech City, TC 12345",
+      content: "Hyderabad, Telangana, India",
       link: "#",
     },
   ];

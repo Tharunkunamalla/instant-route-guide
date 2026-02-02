@@ -14,192 +14,8 @@ import { Link } from 'react-router-dom';
 
 const RADIUS_METERS = 3000; // 3km radius
 
-// Memoized Sidebar to prevent re-renders during animation
-const ControlSidebar = React.memo(({ 
-    isGraphLoading, 
-    graph, 
-    routeInfo, 
-    algorithm, 
-    setAlgorithm, 
-    speed, 
-    setSpeed, 
-    source, 
-    destination, 
-    isLoading, 
-    isCalculating, 
-    calculateRoute, 
-    handleReset 
-}) => {
-    return (
-      <aside className="w-[400px] flex-shrink-0 bg-zinc-950/95 backdrop-blur border-r border-zinc-800 flex flex-col z-20 shadow-2xl">
-         
-         {/* Header */}
-         <div className="p-6 border-b border-zinc-800">
-             <div className="flex items-center gap-3 mb-2">
-                <div className="p-2 bg-blue-600 rounded-lg shadow-lg shadow-blue-900/20">
-                    <MapIcon className="w-6 h-6 text-white" />
-                </div>
-                <h1 className="text-2xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-blue-400 to-emerald-400">
-                    GraphPath
-                </h1>
-             </div>
-             <p className="text-sm text-zinc-400">
-                 Immersive Visualization Console
-             </p>
-             <Link to="/map">
-                 <Button variant="link" className="p-0 h-auto text-xs text-blue-400 mt-2 hover:text-blue-300">
-                    <ArrowLeft className="w-3 h-3 mr-1" /> Back to Standard View
-                 </Button>
-             </Link>
-         </div>
-
-         {/* Scrollable Content */}
-         <div className="flex-1 overflow-y-auto p-6 space-y-8 scrollbar-thin scrollbar-thumb-zinc-700 scrollbar-track-transparent">
-             
-             {/* Status Card */}
-             <div className="bg-zinc-900/50 rounded-xl p-4 border border-zinc-800">
-                 <div className="flex items-center justify-between mb-3">
-                     <span className="text-xs font-semibold text-zinc-500 uppercase tracking-wider">Status</span>
-                     {isGraphLoading ? (
-                        <span className="flex items-center text-xs text-yellow-500 gap-2">
-                             <Loader2 className="w-3 h-3 animate-spin"/> Loading Map...
-                        </span>
-                     ) : (
-                        <span className="flex items-center text-xs text-emerald-500 gap-2">
-                             <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"/> online
-                        </span>
-                     )}
-                 </div>
-                 <div className="space-y-2">
-                    <div className="flex justify-between text-sm">
-                        <span className="text-zinc-400">Nodes</span>
-                        <span className="font-mono text-zinc-200">{Object.keys(graph).length.toLocaleString()}</span>
-                    </div>
-                    {routeInfo && (
-                        <div className="pt-2 mt-2 border-t border-zinc-800 animate-in fade-in slide-in-from-left-4">
-                            <div className="flex justify-between text-sm mb-1">
-                                <span className="text-zinc-400">Distance</span>
-                                <span className="font-bold text-white">{routeInfo.distance}</span>
-                            </div>
-                            <div className="flex justify-between text-sm">
-                                <span className="text-zinc-400">Est. Time</span>
-                                <span className="font-bold text-white">{routeInfo.duration}</span>
-                            </div>
-                        </div>
-                    )}
-                 </div>
-             </div>
-
-             {/* Algorithm Selection */}
-             <div className="space-y-3">
-                 <label className="text-sm font-medium text-zinc-300">Algorithm Strategy</label>
-                 <Select value={algorithm} onValueChange={setAlgorithm}>
-                    <SelectTrigger className="bg-zinc-900 border-zinc-700 h-11 text-zinc-200">
-                        <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent className="bg-zinc-900 border-zinc-700 text-zinc-200">
-                        <SelectItem value="Dijkstra">Dijkstra's Algorithm</SelectItem>
-                        <SelectItem value="A*">A* Search (Heuristic)</SelectItem>
-                        <SelectItem value="BFS">Breadth-First Search</SelectItem>
-                    </SelectContent>
-                 </Select>
-                 <p className="text-xs text-zinc-500">
-                     {algorithm === 'Dijkstra' && "Guarantees shortest path. Explores all directions equally."}
-                     {algorithm === 'A*' && "Optimized for speed. Uses coordinates to guide the search."}
-                     {algorithm === 'BFS' && "Unweighted broad search. Good for ensuring minimum hops."}
-                 </p>
-             </div>
-
-             {/* Speed Control */}
-             <div className="space-y-4">
-                 <div className="flex justify-between">
-                    <label className="text-sm font-medium text-zinc-300">Simulation Speed</label>
-                    <span className="text-xs font-mono text-zinc-500">{speed}ms</span>
-                 </div>
-                 <Slider 
-                    value={[speed]} 
-                    onValueChange={(v) => setSpeed(v[0])} 
-                    min={0} 
-                    max={500} 
-                    step={10} 
-                    className="cursor-pointer"
-                 />
-                 <div className="flex justify-between text-[10px] text-zinc-600 uppercase tracking-widest font-bold">
-                     <span>Instant</span>
-                     <span>Real-time</span>
-                 </div>
-             </div>
-
-              {/* Locations */}
-              <div className="space-y-3">
-                   <div className="relative">
-                       <div className="absolute left-3 top-3 w-4 h-[calc(100%-24px)] border-l-2 border-dashed border-zinc-700/50 ml-1"></div>
-                       
-                       <div className="space-y-3">
-                           <div className="relative">
-                                <div className="absolute left-0 top-1/2 -translate-y-1/2 z-10 bg-zinc-950">
-                                    <MapIcon className="w-4 h-4 text-blue-500 fill-blue-500/20" />
-                                </div>
-                                <Input 
-                                   value={source !== null ? `Lat: ${graph[source]?.lat.toFixed(4)}...` : ''} 
-                                   readOnly 
-                                   placeholder="Click map to set Start" 
-                                   className="pl-8 bg-zinc-900 border-zinc-700 text-zinc-300 placeholder:text-zinc-600"
-                                />
-                           </div>
-                           <div className="relative">
-                                <div className="absolute left-0 top-1/2 -translate-y-1/2 z-10 bg-zinc-950">
-                                    <MapIcon className="w-4 h-4 text-red-500 fill-red-500/20" />
-                                </div>
-                                <Input 
-                                   value={destination !== null ? `Node: ${destination}` : ''} 
-                                   readOnly 
-                                   placeholder="Select Destination" 
-                                   className="pl-8 bg-zinc-900 border-zinc-700 text-zinc-300 placeholder:text-zinc-600"
-                                />
-                           </div>
-                       </div>
-                   </div>
-              </div>
-
-         </div>
-
-         {/* Footer Actions */}
-         <div className="p-6 bg-zinc-950/50 border-t border-zinc-800 space-y-3">
-             <Button 
-                onClick={calculateRoute} 
-                className="w-full h-12 text-base bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 shadow-lg shadow-blue-900/20" 
-                disabled={isLoading || isCalculating || !destination}
-             >
-                {isCalculating ? (
-                    <>
-                        <Loader2 className="mr-2 h-5 w-5 animate-spin"/> Calculating...
-                    </>
-                ) : isLoading ? (
-                    <>
-                        <Loader2 className="mr-2 h-5 w-5 animate-spin"/> Visualizing...
-                    </>
-                ) : (
-                    <>
-                        <Navigation className="mr-2 h-5 w-5 fill-current"/> Visualize Route
-                    </>
-                )}
-             </Button>
-             
-             <Button 
-                variant="outline" 
-                onClick={handleReset} 
-                className="w-full border-zinc-700 text-zinc-400 hover:text-white hover:bg-zinc-800"
-             >
-                <RotateCcw className="mr-2 h-4 w-4"/> Clear Map
-             </Button>
-         </div>
-
-      </aside>
-    )
-});
-
 const ImmersiveMapPage = () => {
+  const [graph, setGraph] = useState({});
   const [source, setSource] = useState(null);
   const [destination, setDestination] = useState(null);
   const [algorithm, setAlgorithm] = useState("Dijkstra");
@@ -367,26 +183,177 @@ const ImmersiveMapPage = () => {
 
   return (
     <div className="flex h-screen w-screen overflow-hidden bg-background text-foreground">
+      
+      {/* Sidebar Controls */}
+      <aside className="w-[400px] flex-shrink-0 bg-zinc-950/95 backdrop-blur border-r border-zinc-800 flex flex-col z-20 shadow-2xl">
+         
+         {/* Header */}
+         <div className="p-6 border-b border-zinc-800">
+             <div className="flex items-center gap-3 mb-2">
+                <div className="p-2 bg-blue-600 rounded-lg shadow-lg shadow-blue-900/20">
+                    <MapIcon className="w-6 h-6 text-white" />
+                </div>
+                <h1 className="text-2xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-blue-400 to-emerald-400">
+                    GraphPath
+                </h1>
+             </div>
+             <p className="text-sm text-zinc-400">
+                 Immersive Visualization Console
+             </p>
+             <Link to="/map">
+                 <Button variant="link" className="p-0 h-auto text-xs text-blue-400 mt-2 hover:text-blue-300">
+                    <ArrowLeft className="w-3 h-3 mr-1" /> Back to Standard View
+                 </Button>
+             </Link>
+         </div>
 
-      <ControlSidebar
-        isGraphLoading={isGraphLoading}
-        graph={graph}
-        routeInfo={routeInfo}
-        algorithm={algorithm}
-        setAlgorithm={setAlgorithm}
-        speed={speed}
-        setSpeed={setSpeed}
-        source={source}
-        destination={destination}
-        isLoading={isLoading}
-        isCalculating={isCalculating}
-        calculateRoute={calculateRoute}
-        handleReset={handleReset}
-      />
+         {/* Scrollable Content */}
+         <div className="flex-1 overflow-y-auto p-6 space-y-8 scrollbar-thin scrollbar-thumb-zinc-700 scrollbar-track-transparent">
+             
+             {/* Status Card */}
+             <div className="bg-zinc-900/50 rounded-xl p-4 border border-zinc-800">
+                 <div className="flex items-center justify-between mb-3">
+                     <span className="text-xs font-semibold text-zinc-500 uppercase tracking-wider">Status</span>
+                     {isGraphLoading ? (
+                        <span className="flex items-center text-xs text-yellow-500 gap-2">
+                             <Loader2 className="w-3 h-3 animate-spin"/> Loading Map...
+                        </span>
+                     ) : (
+                        <span className="flex items-center text-xs text-emerald-500 gap-2">
+                             <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"/> online
+                        </span>
+                     )}
+                 </div>
+                 <div className="space-y-2">
+                    <div className="flex justify-between text-sm">
+                        <span className="text-zinc-400">Nodes</span>
+                        <span className="font-mono text-zinc-200">{Object.keys(graph).length.toLocaleString()}</span>
+                    </div>
+                    {routeInfo && (
+                        <div className="pt-2 mt-2 border-t border-zinc-800 animate-in fade-in slide-in-from-left-4">
+                            <div className="flex justify-between text-sm mb-1">
+                                <span className="text-zinc-400">Distance</span>
+                                <span className="font-bold text-white">{routeInfo.distance}</span>
+                            </div>
+                            <div className="flex justify-between text-sm">
+                                <span className="text-zinc-400">Est. Time</span>
+                                <span className="font-bold text-white">{routeInfo.duration}</span>
+                            </div>
+                        </div>
+                    )}
+                 </div>
+             </div>
+
+             {/* Algorithm Selection */}
+             <div className="space-y-3">
+                 <label className="text-sm font-medium text-zinc-300">Algorithm Strategy</label>
+                 <Select value={algorithm} onValueChange={setAlgorithm}>
+                    <SelectTrigger className="bg-zinc-900 border-zinc-700 h-11 text-zinc-200">
+                        <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent className="bg-zinc-900 border-zinc-700 text-zinc-200">
+                        <SelectItem value="Dijkstra">Dijkstra's Algorithm</SelectItem>
+                        <SelectItem value="A*">A* Search (Heuristic)</SelectItem>
+                        <SelectItem value="BFS">Breadth-First Search</SelectItem>
+                    </SelectContent>
+                 </Select>
+                 <p className="text-xs text-zinc-500">
+                     {algorithm === 'Dijkstra' && "Guarantees shortest path. Explores all directions equally."}
+                     {algorithm === 'A*' && "Optimized for speed. Uses coordinates to guide the search."}
+                     {algorithm === 'BFS' && "Unweighted broad search. Good for ensuring minimum hops."}
+                 </p>
+             </div>
+
+             {/* Speed Control */}
+             <div className="space-y-4">
+                 <div className="flex justify-between">
+                    <label className="text-sm font-medium text-zinc-300">Simulation Speed</label>
+                    <span className="text-xs font-mono text-zinc-500">{speed}ms</span>
+                 </div>
+                 <Slider 
+                    value={[speed]} 
+                    onValueChange={(v) => setSpeed(v[0])} 
+                    min={0} 
+                    max={500} 
+                    step={10} 
+                    className="cursor-pointer"
+                 />
+                 <div className="flex justify-between text-[10px] text-zinc-600 uppercase tracking-widest font-bold">
+                     <span>Instant</span>
+                     <span>Real-time</span>
+                 </div>
+             </div>
+
+              {/* Locations */}
+              <div className="space-y-3">
+                   <div className="relative">
+                       <div className="absolute left-3 top-3 w-4 h-[calc(100%-24px)] border-l-2 border-dashed border-zinc-700/50 ml-1"></div>
+                       
+                       <div className="space-y-3">
+                           <div className="relative">
+                                <div className="absolute left-0 top-1/2 -translate-y-1/2 z-10 bg-zinc-950">
+                                    <MapIcon className="w-4 h-4 text-blue-500 fill-blue-500/20" />
+                                </div>
+                                <Input 
+                                   value={source !== null ? `Lat: ${graph[source]?.lat.toFixed(4)}...` : ''} 
+                                   readOnly 
+                                   placeholder="Click map to set Start" 
+                                   className="pl-8 bg-zinc-900 border-zinc-700 text-zinc-300 placeholder:text-zinc-600"
+                                />
+                           </div>
+                           <div className="relative">
+                                <div className="absolute left-0 top-1/2 -translate-y-1/2 z-10 bg-zinc-950">
+                                    <MapIcon className="w-4 h-4 text-red-500 fill-red-500/20" />
+                                </div>
+                                <Input 
+                                   value={destination !== null ? `Node: ${destination}` : ''} 
+                                   readOnly 
+                                   placeholder="Select Destination" 
+                                   className="pl-8 bg-zinc-900 border-zinc-700 text-zinc-300 placeholder:text-zinc-600"
+                                />
+                           </div>
+                       </div>
+                   </div>
+              </div>
+
+         </div>
+
+         {/* Footer Actions */}
+         <div className="p-6 bg-zinc-950/50 border-t border-zinc-800 space-y-3">
+             <Button 
+                onClick={calculateRoute} 
+                className="w-full h-12 text-base bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 shadow-lg shadow-blue-900/20" 
+                disabled={isLoading || isCalculating || !destination}
+             >
+                {isCalculating ? (
+                    <>
+                        <Loader2 className="mr-2 h-5 w-5 animate-spin"/> Calculating...
+                    </>
+                ) : isLoading ? (
+                    <>
+                        <Loader2 className="mr-2 h-5 w-5 animate-spin"/> Visualizing...
+                    </>
+                ) : (
+                    <>
+                        <Navigation className="mr-2 h-5 w-5 fill-current"/> Visualize Route
+                    </>
+                )}
+             </Button>
+             
+             <Button 
+                variant="outline" 
+                onClick={handleReset} 
+                className="w-full border-zinc-700 text-zinc-400 hover:text-white hover:bg-zinc-800"
+             >
+                <RotateCcw className="mr-2 h-4 w-4"/> Clear Map
+             </Button>
+         </div>
+
+      </aside>
 
       {/* Main Map Area */}
       <main className="flex-1 relative h-full bg-zinc-900">
-          <MapVisualizer
+          <MapVisualizer 
               graph={graph}
               source={source}
               destination={destination}

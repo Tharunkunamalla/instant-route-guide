@@ -92,8 +92,8 @@ const VisitedNodesLayer = memo(({ visitedNodes, graph }) => {
                      L.circleMarker([node.lat, node.lng], {
                          radius: 3, 
                          color: "blue",
-                         fillColor: "blue",
-                         fillOpacity: 0.6,
+                         fillColor: "#3b82f6",
+                         fillOpacity: 0.8,
                          weight: 0,
                          interactive: false // significant perf boost
                      }).addTo(layerGroupRef.current);
