@@ -1,4 +1,4 @@
-import { useEffect, useState, memo } from 'react';
+import React, { useEffect, useState, memo } from 'react';
 import { MapContainer, TileLayer, CircleMarker, Polyline, Popup, useMap, useMapEvents, Circle, Marker } from 'react-leaflet';
 import L from 'leaflet';
 
@@ -52,25 +52,67 @@ const StaticEdges = memo(({ graph }) => {
 }, (prev, next) => prev.graph === next.graph); // Custom comparison if needed, but strict equality of ref should suffice if immutable
 
 // 2. Dynamic Visited Nodes Layer - Renders when visitedNodes changes
+// 2. Dynamic Visited Nodes Layer - Renders when visitedNodes changes
+// Optimized to avoid React render overhead for thousands of nodes
 const VisitedNodesLayer = memo(({ visitedNodes, graph }) => {
-    if (!visitedNodes || visitedNodes.length === 0) return null;
+    const map = useMap();
+    const layerGroupRef = React.useRef(null);
+    const lastCountRef = React.useRef(0);
 
-    return (
-        <>
-            {visitedNodes.map(id => {
-                const node = graph[id];
-                if (!node) return null;
-                return (
-                    <CircleMarker
-                        key={id}
-                        center={[node.lat, node.lng]}
-                        radius={2} // Small blue dots
-                        pathOptions={{ color: "blue", fillColor: "blue", fillOpacity: 0.6, weight: 0 }}
-                    />
-                );
-            })}
-        </>
-    );
+    useEffect(() => {
+        if (!layerGroupRef.current) {
+            layerGroupRef.current = L.layerGroup().addTo(map);
+        }
+
+        // If visitedNodes was reset (emptied or new search started)
+        if (!visitedNodes || visitedNodes.length === 0) {
+            layerGroupRef.current.clearLayers();
+            lastCountRef.current = 0;
+            return;
+        }
+
+        // If we have fewer nodes than before, it means a reset happened that wasn't caught by length=0
+        // (e.g. user clicked calculate again immediately). Clear and redraw.
+        if (visitedNodes.length < lastCountRef.current) {
+            layerGroupRef.current.clearLayers();
+            lastCountRef.current = 0;
+        }
+
+        // Add only NEW nodes
+        const start = lastCountRef.current;
+        const end = visitedNodes.length;
+
+        if (start < end) {
+            const batch = visitedNodes.slice(start, end);
+            
+            // Create a small fragment of markers (Leaflet handles this internally but batching helps)
+            batch.forEach(id => {
+                 const node = graph[id];
+                 if (node) {
+                     L.circleMarker([node.lat, node.lng], {
+                         radius: 3, 
+                         color: "blue",
+                         fillColor: "blue",
+                         fillOpacity: 0.6,
+                         weight: 0,
+                         interactive: false // significant perf boost
+                     }).addTo(layerGroupRef.current);
+                 }
+            });
+            lastCountRef.current = end;
+        }
+    }, [visitedNodes, graph, map]);
+    
+    // Cleanup on unmount
+     useEffect(() => {
+        return () => {
+             if (layerGroupRef.current) {
+                 layerGroupRef.current.remove();
+             }
+        };
+     }, [map]);
+
+    return null;
 });
 
 // 3. Path Layer - Renders when path changes
@@ -154,7 +196,6 @@ const AutoZoom = ({ path, graph }) => {
     const map = useMap();
 
     useEffect(() => {
-        // console.log("AutoZoom Triggered. Path length:", path?.length);
         if (!path || path.length === 0) return;
 
         const points = path.map(id => {
@@ -162,13 +203,10 @@ const AutoZoom = ({ path, graph }) => {
             return node ? [node.lat, node.lng] : null;
         }).filter(p => p !== null);
 
-        // console.log("Valid points found:", points.length);
-
         if (points.length > 0) {
             const bounds = L.latLngBounds(points);
             try {
                 map.fitBounds(bounds, { padding: [50, 50], maxZoom: 16, animate: true });
-                // console.log("fitBounds called with:", bounds);
             } catch (error) {
                 console.error("Error in fitBounds:", error);
             }
@@ -182,7 +220,8 @@ const MapVisualizer = ({
   graph, 
   source, 
   destination, 
-  path, 
+  path,
+  zoomPath, // New prop for immediate zooming
   visitedNodes, 
   radius, 
   isExpanded,
@@ -206,7 +245,7 @@ const MapVisualizer = ({
       />
       
       <MapResizer isExpanded={isExpanded} />
-      <AutoZoom path={path} graph={graph} />
+      <AutoZoom path={zoomPath || path} graph={graph} />
       <MapEvents onMapClick={onMapClick} />
 
       <StaticEdges graph={graph} />

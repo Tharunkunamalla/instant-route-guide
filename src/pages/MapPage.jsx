@@ -19,7 +19,10 @@ import { dijkstra } from "@/algorithms/dijkstra";
 import { astar } from "@/algorithms/astar";
 import { bfs } from "@/algorithms/bfs";
 
+
 import { fetchRoadNetwork, buildGraphFromOSM, findNearestNode } from "@/lib/osm";
+
+const RADIUS_METERS = 3000;
 
 const MapPage = () => {
   const [graph, setGraph] = useState({});
@@ -30,12 +33,12 @@ const MapPage = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [isGraphLoading, setIsGraphLoading] = useState(false);
   const [path, setPath] = useState([]);
+  const [zoomPath, setZoomPath] = useState([]);
   const [visitedNodes, setVisitedNodes] = useState([]);
   const [routeInfo, setRouteInfo] = useState(null);
+  const [isCalculating, setIsCalculating] = useState(false);
   const [isExpanded, setIsExpanded] = useState(false);
   const { toast } = useToast();
-
-  const RADIUS_METERS = 2000; // Match OSM fetch radius roughly
 
   const handleMapClick = async (e) => {
       const { lat, lng } = e.latlng;
@@ -133,6 +136,7 @@ const MapPage = () => {
     setSource(null);
     setDestination(null);
     setPath([]);
+    setZoomPath([]);
     setVisitedNodes([]);
     setRouteInfo(null);
     toast({ title: "Reset", description: "Map cleared. Click to set new source." });
@@ -196,40 +200,49 @@ const MapPage = () => {
        return;
     }
 
-    let result;
-    // Pass string IDs
-    if (algorithm === "Dijkstra") {
-      result = dijkstra(graph, String(source), String(destination));
-    } else if (algorithm === "A*") {
-      result = astar(graph, String(source), String(destination));
-    } else if (algorithm === "BFS") {
-      result = bfs(graph, String(source), String(destination));
-    }
+    setIsCalculating(true);
 
-    if (!result || result.path.length === 0) {
-        toast({ title: "No Path", description: "No route found between these nodes.", variant: "destructive" });
-        return;
-    }
+    // Async delay to allow UI update
+    setTimeout(() => {
+        let result;
+        // Pass string IDs
+        if (algorithm === "Dijkstra") {
+        result = dijkstra(graph, String(source), String(destination));
+        } else if (algorithm === "A*") {
+        result = astar(graph, String(source), String(destination));
+        } else if (algorithm === "BFS") {
+        result = bfs(graph, String(source), String(destination));
+        }
 
-    // Format distance
-    const d = result.distance;
-    const distanceStr = d > 1000 
-        ? `${(d / 1000).toFixed(2)} km` 
-        : `${Math.round(d)} m`;
+        if (!result || result.path.length === 0) {
+            toast({ title: "No Path", description: "No route found between these nodes.", variant: "destructive" });
+            setIsCalculating(false);
+            return;
+        }
 
-    // Format duration (assuming ~35km/h or 10m/s for city driving)
-    const seconds = Math.round(d / 10);
-    const durationStr = seconds > 60 
-        ? `${Math.floor(seconds / 60)} min ${seconds % 60} s` 
-        : `${seconds} s`;
+        // Format distance
+        const d = result.distance;
+        const distanceStr = d > 1000 
+            ? `${(d / 1000).toFixed(2)} km` 
+            : `${Math.round(d)} m`;
 
-    // Start animation, show stats only AFTER completion
-    animate(result.visitedOrder, result.path, () => {
-        setRouteInfo({ 
-            distance: distanceStr, 
-            duration: durationStr 
-        }); 
-    });
+        // Format duration (assuming ~35km/h or 10m/s for city driving)
+        const seconds = Math.round(d / 10);
+        const durationStr = seconds > 60 
+            ? `${Math.floor(seconds / 60)} min ${seconds % 60} s` 
+            : `${seconds} s`;
+        
+        setIsCalculating(false);
+        setZoomPath(result.path); // Auto zoom immediately
+
+        // Start animation, show stats only AFTER completion
+        animate(result.visitedOrder, result.path, () => {
+            setRouteInfo({ 
+                distance: distanceStr, 
+                duration: durationStr 
+            }); 
+        });
+    }, 100);
   };
 
   // Compare function same as before...
@@ -328,8 +341,8 @@ const MapPage = () => {
                        <strong>Note:</strong> Optimized for Telangana & Kerala regions for faster route finding.
                    </div>
 
-                   <Button onClick={calculateRoute} className="w-full bg-blue-600 hover:bg-blue-700 text-white" disabled={isLoading || !destination}>
-                     {isLoading ? <Loader2 className="animate-spin mr-2 h-4 w-4"/> : <Play className="mr-2 h-4 w-4"/>} Visualize Route
+                   <Button onClick={calculateRoute} className="w-full bg-blue-600 hover:bg-blue-700 text-white" disabled={isLoading || isCalculating || !destination}>
+                     {isCalculating ? <><Loader2 className="animate-spin mr-2 h-4 w-4"/> Calculating...</> : (isLoading ? <><Loader2 className="animate-spin mr-2 h-4 w-4"/> Visualizing...</> : <><Play className="mr-2 h-4 w-4"/> Visualize Route</>)}
                    </Button>
                    
                    {routeInfo && (
