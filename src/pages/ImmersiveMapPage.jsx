@@ -200,6 +200,7 @@ const ControlSidebar = React.memo(({
 });
 
 const ImmersiveMapPage = () => {
+  const [graph, setGraph] = useState({});
   const [source, setSource] = useState(null);
   const [destination, setDestination] = useState(null);
   const [algorithm, setAlgorithm] = useState("Dijkstra");
