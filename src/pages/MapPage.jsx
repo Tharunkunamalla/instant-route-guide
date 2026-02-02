@@ -22,7 +22,7 @@ import { bfs } from "@/algorithms/bfs";
 
 import { fetchRoadNetwork, buildGraphFromOSM, findNearestNode } from "@/lib/osm";
 
-const RADIUS_METERS = 3000;
+const RADIUS_METERS = 1500;
 
 const MapPage = () => {
   const [graph, setGraph] = useState({});
