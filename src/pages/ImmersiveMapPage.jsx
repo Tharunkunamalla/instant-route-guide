@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Slider } from "@/components/ui/slider";
 import { Input } from "@/components/ui/input";
-import { Loader2, Play, RotateCcw, Maximize2, Minimize2, Map as MapIcon, ArrowLeft, Navigation } from "lucide-react";
+import { Loader2, Play, Pause, StepForward, RotateCcw, Maximize2, Minimize2, Map as MapIcon, ArrowLeft, Navigation } from "lucide-react";
 import MapVisualizer from '@/components/MapVisualizer';
 import { buildGraphFromOSM, fetchRoadNetwork, findNearestNode } from '@/lib/osm';
 import { dijkstra } from '@/algorithms/dijkstra';
@@ -29,6 +29,18 @@ const ControlSidebar = React.memo(({
     isCalculating, 
     calculateRoute, 
  
+
+    
+    // Playback Props
+    isPlaying,
+    togglePlay,
+    stepForward,
+    visitedCount,
+    
+    // Data Props
+    visitedOrder,
+    finalPath,
+
     handleReset,
     city,
     setCity,
@@ -181,25 +193,44 @@ const ControlSidebar = React.memo(({
 
          {/* Footer Actions */}
          <div className="p-6 bg-zinc-950/50 border-t border-zinc-800 space-y-3">
-             <Button 
-                onClick={calculateRoute} 
-                className="w-full h-12 text-base bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 shadow-lg shadow-blue-900/20" 
-                disabled={isLoading || isCalculating || !destination}
-             >
-                {isCalculating ? (
-                    <>
-                        <Loader2 className="mr-2 h-5 w-5 animate-spin"/> Calculating...
-                    </>
-                ) : isLoading ? (
-                    <>
-                        <Loader2 className="mr-2 h-5 w-5 animate-spin"/> Visualizing...
-                    </>
-                ) : (
-                    <>
-                        <Navigation className="mr-2 h-5 w-5 fill-current"/> Visualize Route
-                    </>
-                )}
-             </Button>
+             {(visitedOrder.length > 0 || finalPath.length > 0) && !isCalculating ? (
+                 <div className="flex gap-2">
+                     <Button 
+                        onClick={togglePlay} 
+                        className="flex-1 h-12 text-base bg-gradient-to-r from-emerald-600 to-green-600 hover:from-emerald-700 hover:to-green-700 shadow-lg shadow-emerald-900/20"
+                     >
+                        {isPlaying ? (
+                             <><Pause className="mr-2 h-5 w-5 fill-current"/> Pause</>
+                        ) : (
+                             <><Play className="mr-2 h-5 w-5 fill-current"/> {visitedCount >= visitedOrder.length ? "Replay" : "Play"}</>
+                        )}
+                     </Button>
+                     <Button 
+                        onClick={stepForward} 
+                        className="h-12 w-12 px-0 bg-zinc-800 hover:bg-zinc-700 border border-zinc-700 disabled:opacity-50 disabled:cursor-not-allowed"
+                        title={visitedCount >= visitedOrder.length ? "Animation Finished" : "Step Forward"}
+                        disabled={visitedCount >= visitedOrder.length}
+                     >
+                        <StepForward className="h-5 w-5"/>
+                     </Button>
+                 </div>
+             ) : (
+                 <Button 
+                    onClick={calculateRoute} 
+                    className="w-full h-12 text-base bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 shadow-lg shadow-blue-900/20" 
+                    disabled={isLoading || isCalculating || !destination}
+                 >
+                    {isCalculating ? (
+                        <>
+                            <Loader2 className="mr-2 h-5 w-5 animate-spin"/> Calculating...
+                        </>
+                    ) : (
+                        <>
+                            <Navigation className="mr-2 h-5 w-5 fill-current"/> Visualize Route
+                        </>
+                    )}
+                 </Button>
+             )}
              
              <Button 
                 variant="outline" 
@@ -233,6 +264,9 @@ const ImmersiveMapPage = () => {
   const [city, setCity] = useState("");
   const [targetLocation, setTargetLocation] = useState(null);
   const { toast } = useToast();
+
+  const [finalPath, setFinalPath] = useState([]);
+  const [isPlaying, setIsPlaying] = useState(false);
 
   const handleCitySearch = async (e) => {
     if (e.key === 'Enter' && city.trim() !== "") {
@@ -340,10 +374,13 @@ const ImmersiveMapPage = () => {
     setSource(null);
     setDestination(null);
     setPath([]);
+    setFinalPath([]);
     setZoomPath([]);
     setVisitedNodes([]);
     setVisitedOrder([]);
     setVisitedCount(0);
+    setIsPlaying(false);
+    setIsLoading(false);
     setRouteInfo(null);
     toast({ title: "Reset", description: "Map cleared. Click to set new source." });
   };
@@ -351,42 +388,63 @@ const ImmersiveMapPage = () => {
   const speedRef = useRef(speed);
   useEffect(() => { speedRef.current = speed; }, [speed]);
 
-  const animate = async (visited, finalPath, onComplete) => {
-    console.log("Starting animation with:", visited.length, "nodes");
-    setIsLoading(true);
-    // Store full order, animate count
-    setVisitedOrder(visited);
-    setVisitedCount(0);
-    setPath([]);
-    
-    let i = 0;
-    const total = visited.length;
+  // Main Animation Loop
+  useEffect(() => {
+    if (!isPlaying) return;
+
+    if (visitedCount >= visitedOrder.length) {
+        setIsPlaying(false);
+        setIsLoading(false);
+        setPath(finalPath); // Show yellow path
+        return;
+    }
+
+    const currentDelay = speedRef.current;
+    let timeoutId;
+    let animationFrameId;
 
     const step = () => {
-        // console.log("Step:", i, "/", total); // verbose logging
-        if (i >= total) {
-            console.log("Animation complete");
-            setPath(finalPath);
-            setIsLoading(false);
-            if (onComplete) onComplete();
-            return;
-        }
-
-        const currentDelay = speedRef.current;
-        let batchSize = currentDelay === 0 ? 100 : (currentDelay <= 5 ? 10 : 1);
-        
-        i = Math.min(i + batchSize, total);
-        setVisitedCount(i);
-
-        setTimeout(() => requestAnimationFrame(step), currentDelay);
+        setVisitedCount(prev => {
+            const batchSize = currentDelay === 0 ? 100 : (currentDelay <= 5 ? 10 : 1);
+            return Math.min(prev + batchSize, visitedOrder.length);
+        });
     };
-    step();
+
+    if (currentDelay === 0) {
+        animationFrameId = requestAnimationFrame(step);
+    } else {
+        timeoutId = setTimeout(step, currentDelay);
+    }
+
+    return () => {
+        clearTimeout(timeoutId);
+        cancelAnimationFrame(animationFrameId);
+    };
+  }, [isPlaying, visitedCount, visitedOrder.length, finalPath]);
+
+  const togglePlay = () => {
+      if (visitedCount >= visitedOrder.length && visitedOrder.length > 0) {
+          setVisitedCount(0); // Replay
+          setPath([]);
+      }
+      setIsPlaying(!isPlaying);
+  };
+
+  const stepForward = () => {
+      setIsPlaying(false);
+      if (visitedCount < visitedOrder.length) {
+          setVisitedCount(prev => Math.min(prev + 1, visitedOrder.length));
+      }
   };
 
   const calculateRoute = () => {
     if (source === null || destination === null) return;
 
     setIsCalculating(true);
+    setIsPlaying(false);
+    setVisitedCount(0);
+    setPath([]);
+    setVisitedOrder([]);
 
     // Use setTimeout to allow UI to render "Calculating..." state before heavy operation
     setTimeout(() => {
@@ -406,19 +464,17 @@ const ImmersiveMapPage = () => {
         const seconds = Math.round(d / 10);
         const durationStr = seconds > 60 ? `${Math.floor(seconds / 60)} min ${seconds % 60} s` : `${seconds} s`;
 
-        console.log("Algorithm Result:", { 
-            visitedCount: result.visitedOrder.length, 
-            pathLength: result.path.length,
-            firstVisited: result.visitedOrder[0],
-            lastVisited: result.visitedOrder[result.visitedOrder.length-1]
-        });
-
         setIsCalculating(false);
         setZoomPath(result.path); // Zoom immediately
-
-        animate(result.visitedOrder, result.path, () => {
-            setRouteInfo({ distance: distanceStr, duration: durationStr });
-        });
+        
+        // Setup Animation
+        setVisitedOrder(result.visitedOrder);
+        setFinalPath(result.path);
+        setRouteInfo({ distance: distanceStr, duration: durationStr });
+        
+        // Auto-Start
+        setIsLoading(true);
+        setIsPlaying(true);
     }, 100);
   };
 
@@ -438,6 +494,15 @@ const ImmersiveMapPage = () => {
         isLoading={isLoading}
         isCalculating={isCalculating}
         calculateRoute={calculateRoute}
+        
+        // New Props
+        isPlaying={isPlaying}
+        togglePlay={togglePlay}
+        stepForward={stepForward}
+        visitedOrder={visitedOrder}
+        visitedCount={visitedCount}
+        finalPath={finalPath}
+
         handleReset={handleReset}
         city={city}
         setCity={setCity}

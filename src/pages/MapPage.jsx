@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback, useRef } from "react";
 import { motion } from "framer-motion";
-import { MapPin, Navigation, Clock, Loader2, Search, Play, Maximize2, Minimize2, RotateCcw } from "lucide-react";
+import { MapPin, Navigation, Clock, Loader2, Search, Play, Pause, StepForward, Maximize2, Minimize2, RotateCcw } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Link } from "react-router-dom";
 import { Input } from "@/components/ui/input";
@@ -37,6 +37,10 @@ const MapPage = () => {
   const [visitedNodes, setVisitedNodes] = useState([]); // Deprecated, kept for back-compat if needed but unused in new visualizer
   const [visitedOrder, setVisitedOrder] = useState([]);
   const [visitedCount, setVisitedCount] = useState(0);
+  
+  // Animation Control States
+  const [isPlaying, setIsPlaying] = useState(false);
+  const [finalPath, setFinalPath] = useState([]);
 
   const [routeInfo, setRouteInfo] = useState(null);
   const [isCalculating, setIsCalculating] = useState(false);
@@ -165,10 +169,13 @@ const MapPage = () => {
     setSource(null);
     setDestination(null);
     setPath([]);
+    setFinalPath([]);
     setZoomPath([]);
     setVisitedNodes([]);
     setVisitedOrder([]);
     setVisitedCount(0);
+    setIsPlaying(false);
+    setIsLoading(false);
     setRouteInfo(null);
     toast({ title: "Reset", description: "Map cleared. Click to set new source." });
   };
@@ -179,34 +186,60 @@ const MapPage = () => {
      speedRef.current = speed;
   }, [speed]);
 
-  const animate = async (visited, finalPath, onComplete) => {
-    setIsLoading(true);
-    setVisitedNodes([]);
-    setVisitedOrder(visited);
-    setVisitedCount(0);
-    setPath([]);
-    
-    let i = 0;
-    const total = visited.length;
-    
+  // Main Animation Loop
+  useEffect(() => {
+    if (!isPlaying) return;
+
+    if (visitedCount >= visitedOrder.length) {
+        setIsPlaying(false);
+        setIsLoading(false);
+        setPath(finalPath); // Show yellow path
+        return;
+    }
+
+    const currentDelay = speedRef.current;
+    let timeoutId;
+    let animationFrameId;
+
     const step = () => {
-        if (i >= total) {
-            setPath(finalPath);
-            setIsLoading(false);
-            if (onComplete) onComplete();
-            return;
-        }
-
-        const currentDelay = speedRef.current;
-        let batchSize = currentDelay === 0 ? 100 : (currentDelay <= 5 ? 10 : 1);
-        
-        i = Math.min(i + batchSize, total);
-        setVisitedCount(i);
-
-        setTimeout(() => requestAnimationFrame(step), currentDelay);
+        setVisitedCount(prev => {
+            const batchSize = currentDelay === 0 ? 100 : (currentDelay <= 5 ? 10 : 1);
+            const next = Math.min(prev + batchSize, visitedOrder.length);
+            return next;
+        });
     };
 
-    step();
+    if (currentDelay === 0) {
+        // Super fast - use RequestAnimationFrame directly for max speed
+        animationFrameId = requestAnimationFrame(step);
+    } else {
+        timeoutId = setTimeout(step, currentDelay);
+    }
+
+    return () => {
+        clearTimeout(timeoutId);
+        cancelAnimationFrame(animationFrameId);
+    };
+  }, [isPlaying, visitedCount, visitedOrder.length, finalPath]);
+
+
+  const togglePlay = () => {
+      // If finished, reset slightly? Or just do nothing?
+      if (visitedCount >= visitedOrder.length && visitedOrder.length > 0) {
+          // Restart?
+          setVisitedCount(0);
+          setPath([]);
+      }
+      setIsPlaying(!isPlaying);
+  };
+
+  const stepForward = () => {
+      setIsPlaying(false); // Pause if playing
+      if (visitedCount < visitedOrder.length) {
+          setVisitedCount(prev => Math.min(prev + 1, visitedOrder.length));
+      } else if (path.length === 0 && finalPath.length > 0) {
+          setPath(finalPath); // Reveal path if at end
+      }
   };
 
   const calculateRoute = () => {
@@ -216,6 +249,11 @@ const MapPage = () => {
     }
 
     setIsCalculating(true);
+    // Reset previous run
+    setIsPlaying(false);
+    setVisitedCount(0);
+    setPath([]);
+    setVisitedOrder([]);
 
     // Async delay to allow UI update
     setTimeout(() => {
@@ -248,15 +286,20 @@ const MapPage = () => {
             : `${seconds} s`;
         
         setIsCalculating(false);
+        
+        // Update States for Animation
         setZoomPath(result.path); // Auto zoom immediately
+        setVisitedOrder(result.visitedOrder);
+        setFinalPath(result.path);
+        setRouteInfo({ 
+            distance: distanceStr, 
+            duration: durationStr 
+        }); 
+        
+        // Auto-start
+        setIsLoading(true); // "Visualizing..." state
+        setIsPlaying(true); 
 
-        // Start animation, show stats only AFTER completion
-        animate(result.visitedOrder, result.path, () => {
-            setRouteInfo({ 
-                distance: distanceStr, 
-                duration: durationStr 
-            }); 
-        });
     }, 100);
   };
 
@@ -366,9 +409,26 @@ const MapPage = () => {
                        <strong>Note:</strong> Optimized for Telangana & Kerala regions for faster route finding.
                    </div>
 
-                   <Button onClick={calculateRoute} className="w-full bg-blue-600 hover:bg-blue-700 text-white" disabled={isLoading || isCalculating || !destination}>
-                     {isCalculating ? <><Loader2 className="animate-spin mr-2 h-4 w-4"/> Calculating...</> : (isLoading ? <><Loader2 className="animate-spin mr-2 h-4 w-4"/> Visualizing...</> : <><Play className="mr-2 h-4 w-4"/> Visualize Route</>)}
-                   </Button>
+                   {(visitedOrder.length > 0 || finalPath.length > 0) && !isCalculating ? (
+                       <div className="flex gap-2">
+                           <Button onClick={togglePlay} className="flex-1 bg-blue-600 hover:bg-blue-700 text-white">
+                               {isPlaying ? <><Pause className="mr-2 h-4 w-4"/> Pause</> : <><Play className="mr-2 h-4 w-4"/> {visitedCount >= visitedOrder.length ? "Replay" : "Play"}</>}
+                           </Button>
+                           <Button 
+                                onClick={stepForward} 
+                                variant="outline" 
+                                className="border-blue-600/30 hover:bg-blue-600/10 disabled:opacity-50" 
+                                disabled={visitedCount >= visitedOrder.length}
+                                title={visitedCount >= visitedOrder.length ? "End of animation" : "Step Forward"}
+                            >
+                               <StepForward className="h-4 w-4"/>
+                           </Button>
+                       </div>
+                   ) : (
+                        <Button onClick={calculateRoute} className="w-full bg-blue-600 hover:bg-blue-700 text-white" disabled={isLoading || isCalculating || !destination}>
+                        {isCalculating ? <><Loader2 className="animate-spin mr-2 h-4 w-4"/> Calculating...</> : <><Play className="mr-2 h-4 w-4"/> Visualize Route</>}
+                        </Button>
+                   )}
                    
                    {routeInfo && (
                        <div className="p-4 bg-secondary/10 rounded-lg space-y-2 animate-in fade-in slide-in-from-bottom-2">
