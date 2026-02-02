@@ -149,6 +149,35 @@ const MapResizer = ({ isExpanded }) => {
   return null;
 };
 
+// 5. Auto Zoom - Fits bounds when path is set
+const AutoZoom = ({ path, graph }) => {
+    const map = useMap();
+
+    useEffect(() => {
+        // console.log("AutoZoom Triggered. Path length:", path?.length);
+        if (!path || path.length === 0) return;
+
+        const points = path.map(id => {
+            const node = graph[id];
+            return node ? [node.lat, node.lng] : null;
+        }).filter(p => p !== null);
+
+        // console.log("Valid points found:", points.length);
+
+        if (points.length > 0) {
+            const bounds = L.latLngBounds(points);
+            try {
+                map.fitBounds(bounds, { padding: [50, 50], maxZoom: 16, animate: true });
+                // console.log("fitBounds called with:", bounds);
+            } catch (error) {
+                console.error("Error in fitBounds:", error);
+            }
+        }
+    }, [path, graph, map]);
+
+    return null;
+};
+
 const MapVisualizer = ({ 
   graph, 
   source, 
@@ -177,6 +206,7 @@ const MapVisualizer = ({
       />
       
       <MapResizer isExpanded={isExpanded} />
+      <AutoZoom path={path} graph={graph} />
       <MapEvents onMapClick={onMapClick} />
 
       <StaticEdges graph={graph} />
