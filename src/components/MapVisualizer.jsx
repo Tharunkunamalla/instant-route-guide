@@ -233,15 +233,27 @@ const AutoZoom = ({ path, graph }) => {
     return null;
 };
 
+// 6. Map FlyTo - Programmatic navigation
+const MapFlyTo = ({ targetLocation }) => {
+    const map = useMap();
+    useEffect(() => {
+        if (targetLocation) {
+            map.flyTo(targetLocation, 14, { duration: 2 });
+        }
+    }, [targetLocation, map]);
+    return null;
+};
+
 const MapVisualizer = ({ 
   graph, 
   source, 
   destination, 
   path,
-  zoomPath, // New prop for immediate zooming
+  zoomPath, 
   visitedOrder,
   visitedCount, 
   radius, 
+  targetLocation, // New prop for city search
   isExpanded,
   onNodeClick, 
   onMapClick 
@@ -264,6 +276,7 @@ const MapVisualizer = ({
       
       <MapResizer isExpanded={isExpanded} />
       <AutoZoom path={zoomPath || path} graph={graph} />
+      <MapFlyTo targetLocation={targetLocation} />
       <MapEvents onMapClick={onMapClick} />
 
       <StaticEdges graph={graph} />

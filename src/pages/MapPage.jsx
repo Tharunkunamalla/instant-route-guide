@@ -37,10 +37,37 @@ const MapPage = () => {
   const [visitedNodes, setVisitedNodes] = useState([]); // Deprecated, kept for back-compat if needed but unused in new visualizer
   const [visitedOrder, setVisitedOrder] = useState([]);
   const [visitedCount, setVisitedCount] = useState(0);
+
   const [routeInfo, setRouteInfo] = useState(null);
   const [isCalculating, setIsCalculating] = useState(false);
   const [isExpanded, setIsExpanded] = useState(false);
+  const [city, setCity] = useState("");
+  const [targetLocation, setTargetLocation] = useState(null);
   const { toast } = useToast();
+
+  const handleCitySearch = async (e) => {
+    if (e.key === 'Enter' && city.trim() !== "") {
+        try {
+            toast({ title: "Searching City", description: `Looking for ${city}...` });
+            const response = await fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(city)}`);
+            const data = await response.json();
+            
+            if (data && data.length > 0) {
+                const { lat, lon } = data[0];
+                const newLocation = [parseFloat(lat), parseFloat(lon)];
+                setTargetLocation(newLocation);
+                toast({ title: "City Found", description: `Flying to ${data[0].display_name}` });
+                
+                // Just fly there. User can click to set source manually.
+            } else {
+                toast({ title: "City Not Found", description: "Could not locate this place.", variant: "destructive" });
+            }
+        } catch (error) {
+            console.error(error);
+            toast({ title: "Search Error", description: "Failed to connect to search service.", variant: "destructive" });
+        }
+    }
+  };
 
   const handleMapClick = async (e) => {
       const { lat, lng } = e.latlng;
@@ -289,6 +316,16 @@ const MapPage = () => {
                   </CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-6 flex-1 overflow-y-auto min-h-0 scrollbar-thin scrollbar-thumb-secondary/50 scrollbar-track-transparent pr-2">
+                <div className="space-y-2">
+                    <label className="text-sm font-medium">City</label>
+                    <Input 
+                        value={city} 
+                        onChange={(e) => setCity(e.target.value)} 
+                        onKeyDown={handleCitySearch}
+                        placeholder="Type city and press Enter" 
+                    />
+                </div>
+
                    <div className="space-y-2">
                      <label className="text-sm font-medium">Source</label>
                      <Input value={source !== null ? `Lat: ${graph[source]?.lat.toFixed(4)}` : ''} readOnly placeholder="Click on map to start" />
@@ -383,6 +420,7 @@ const MapPage = () => {
                 visitedOrder={visitedOrder}
                 visitedCount={visitedCount}
                 radius={RADIUS_METERS}
+                targetLocation={targetLocation}
                 isExpanded={isExpanded}
                 onNodeClick={handleNodeClick}
                 onMapClick={handleMapClick}

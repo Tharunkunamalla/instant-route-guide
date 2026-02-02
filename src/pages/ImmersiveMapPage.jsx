@@ -28,7 +28,11 @@ const ControlSidebar = React.memo(({
     isLoading, 
     isCalculating, 
     calculateRoute, 
-    handleReset 
+ 
+    handleReset,
+    city,
+    setCity,
+    handleCitySearch
 }) => {
     return (
       <aside className="w-[400px] flex-shrink-0 bg-zinc-950/95 backdrop-blur border-r border-zinc-800 flex flex-col z-20 shadow-2xl">
@@ -132,7 +136,18 @@ const ControlSidebar = React.memo(({
 
               {/* Locations */}
               <div className="space-y-3">
-                   <div className="relative">
+                   <div className="space-y-2">
+                       <label className="text-xs font-semibold text-zinc-500 uppercase tracking-wider">Region Search</label>
+                       <Input 
+                           value={city} 
+                           onChange={(e) => setCity(e.target.value)} 
+                           onKeyDown={handleCitySearch}
+                           placeholder="Type city and press Enter" 
+                           className="bg-zinc-900 border-zinc-700 text-zinc-300 placeholder:text-zinc-600 focus:border-blue-500 focus:ring-blue-500/20"
+                       />
+                   </div>
+
+                   <div className="relative pt-2">
                        <div className="absolute left-3 top-3 w-4 h-[calc(100%-24px)] border-l-2 border-dashed border-zinc-700/50 ml-1"></div>
                        
                        <div className="space-y-3">
@@ -213,8 +228,33 @@ const ImmersiveMapPage = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [isCalculating, setIsCalculating] = useState(false);
   const [speed, setSpeed] = useState(50);
+
   const [routeInfo, setRouteInfo] = useState(null);
+  const [city, setCity] = useState("");
+  const [targetLocation, setTargetLocation] = useState(null);
   const { toast } = useToast();
+
+  const handleCitySearch = async (e) => {
+    if (e.key === 'Enter' && city.trim() !== "") {
+        try {
+            toast({ title: "Searching Region", description: `Looking for ${city}...` });
+            const response = await fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(city)}`);
+            const data = await response.json();
+            
+            if (data && data.length > 0) {
+                const { lat, lon } = data[0];
+                const newLocation = [parseFloat(lat), parseFloat(lon)];
+                setTargetLocation(newLocation);
+                toast({ title: "Region Found", description: `Flying to ${data[0].display_name}` });
+            } else {
+                toast({ title: "Region Not Found", description: "Could not locate this place.", variant: "destructive" });
+            }
+        } catch (error) {
+            console.error(error);
+            toast({ title: "Search Error", description: "Failed to connect to search service.", variant: "destructive" });
+        }
+    }
+  };
 
   const loadGraph = async (lat, lng) => {
       setIsGraphLoading(true);
@@ -399,6 +439,9 @@ const ImmersiveMapPage = () => {
         isCalculating={isCalculating}
         calculateRoute={calculateRoute}
         handleReset={handleReset}
+        city={city}
+        setCity={setCity}
+        handleCitySearch={handleCitySearch}
       />
 
       {/* Main Map Area */}
@@ -412,6 +455,7 @@ const ImmersiveMapPage = () => {
               visitedOrder={visitedOrder}
               visitedCount={visitedCount}
               radius={RADIUS_METERS}
+              targetLocation={targetLocation}
               isExpanded={true} 
               onNodeClick={() => {}} // handled via map click for source/dest mainly
               onMapClick={handleMapClick}
