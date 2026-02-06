@@ -392,19 +392,19 @@ java java_algorithms.Main
 ## 📸 Screenshots
 
 ### Landing Page
-![Landing Page](public/logo1.png)
+![Landing Page](public/s1.png)
 *Modern landing page with hero section and feature showcase*
 
 ### Map Interface
-![Map Interface](public/logo1.png)
+![Map Interface](public/s2.png)
 *Interactive map with route visualization and algorithm controls*
 
 ### Algorithm Visualization
-![Algorithm Visualization](public/logo1.png)
+![Algorithm Visualization](public/s4.png)
 *Real-time visualization of pathfinding algorithms exploring the graph*
 
 ### Route Results
-![Route Results](public/logo1.png)
+![Route Results](public/s5.png)
 *Detailed route information with distance and duration*
 
 ## 📊 Results
