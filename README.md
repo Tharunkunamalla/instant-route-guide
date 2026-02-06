@@ -405,6 +405,7 @@ java java_algorithms.Main
 
 ### Route Results
 ![Route Results](public/s5.png)
+![Route Results](public/s6.png)
 *Detailed route information with distance and duration*
 
 ## 📊 Results
