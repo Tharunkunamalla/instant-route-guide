@@ -9,6 +9,7 @@ import MapVisualizer from '@/components/MapVisualizer';
 import { buildGraphFromOSM, fetchRoadNetwork, findNearestNode } from '@/lib/osm';
 import { dijkstra } from '@/algorithms/dijkstra';
 import { astar } from '@/algorithms/astar';
+import { bfs } from '@/algorithms/bfs';
 import { useToast } from "@/components/ui/use-toast";
 import { Link } from 'react-router-dom';
 
@@ -504,33 +505,39 @@ const ImmersiveMapPage = () => {
 
     // Use setTimeout to allow UI to render "Calculating..." state before heavy operation
     setTimeout(() => {
-        let result;
-        if (algorithm === "Dijkstra") result = dijkstra(graph, String(source), String(destination));
-        else if (algorithm === "A*") result = astar(graph, String(source), String(destination));
-        else result = bfs(graph, String(source), String(destination));
+        try {
+            let result;
+            if (algorithm === "Dijkstra") result = dijkstra(graph, String(source), String(destination));
+            else if (algorithm === "A*") result = astar(graph, String(source), String(destination));
+            else result = bfs(graph, String(source), String(destination));
 
-        if (!result || result.path.length === 0) {
-            toast({ title: "No Path", description: "No route found.", variant: "destructive" });
+            if (!result || result.path.length === 0) {
+                toast({ title: "No Path", description: "No route found.", variant: "destructive" });
+                setIsCalculating(false);
+                return;
+            }
+
+            const d = result.distance;
+            const distanceStr = d > 1000 ? `${(d / 1000).toFixed(2)} km` : `${Math.round(d)} m`;
+            const seconds = Math.round(d / 10);
+            const durationStr = seconds > 60 ? `${Math.floor(seconds / 60)} min ${seconds % 60} s` : `${seconds} s`;
+
             setIsCalculating(false);
-            return;
+            setZoomPath(result.path); // Zoom immediately
+            
+            // Setup Animation
+            setVisitedOrder(result.visitedOrder);
+            setFinalPath(result.path);
+            setRouteInfo({ distance: distanceStr, duration: durationStr });
+            
+            // Auto-Start
+            setIsLoading(true);
+            setIsPlaying(true);
+        } catch (error) {
+            console.error("Algorithm Error:", error);
+            setIsCalculating(false);
+            toast({ title: "Calculation Error", description: "An error occurred while calculating the route.", variant: "destructive" });
         }
-
-        const d = result.distance;
-        const distanceStr = d > 1000 ? `${(d / 1000).toFixed(2)} km` : `${Math.round(d)} m`;
-        const seconds = Math.round(d / 10);
-        const durationStr = seconds > 60 ? `${Math.floor(seconds / 60)} min ${seconds % 60} s` : `${seconds} s`;
-
-        setIsCalculating(false);
-        setZoomPath(result.path); // Zoom immediately
-        
-        // Setup Animation
-        setVisitedOrder(result.visitedOrder);
-        setFinalPath(result.path);
-        setRouteInfo({ distance: distanceStr, duration: durationStr });
-        
-        // Auto-Start
-        setIsLoading(true);
-        setIsPlaying(true);
     }, 100);
   };
 

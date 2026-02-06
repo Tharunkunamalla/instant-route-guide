@@ -257,49 +257,54 @@ const MapPage = () => {
 
     // Async delay to allow UI update
     setTimeout(() => {
-        let result;
-        // Pass string IDs
-        if (algorithm === "Dijkstra") {
-        result = dijkstra(graph, String(source), String(destination));
-        } else if (algorithm === "A*") {
-        result = astar(graph, String(source), String(destination));
-        } else if (algorithm === "BFS") {
-        result = bfs(graph, String(source), String(destination));
-        }
+        try {
+            let result;
+            // Pass string IDs
+            if (algorithm === "Dijkstra") {
+            result = dijkstra(graph, String(source), String(destination));
+            } else if (algorithm === "A*") {
+            result = astar(graph, String(source), String(destination));
+            } else if (algorithm === "BFS") {
+            result = bfs(graph, String(source), String(destination));
+            }
 
-        if (!result || result.path.length === 0) {
-            toast({ title: "No Path", description: "No route found between these nodes.", variant: "destructive" });
+            if (!result || result.path.length === 0) {
+                toast({ title: "No Path", description: "No route found between these nodes.", variant: "destructive" });
+                setIsCalculating(false);
+                return;
+            }
+
+            // Format distance
+            const d = result.distance;
+            const distanceStr = d > 1000 
+                ? `${(d / 1000).toFixed(2)} km` 
+                : `${Math.round(d)} m`;
+
+            // Format duration (assuming ~35km/h or 10m/s for city driving)
+            const seconds = Math.round(d / 10);
+            const durationStr = seconds > 60 
+                ? `${Math.floor(seconds / 60)} min ${seconds % 60} s` 
+                : `${seconds} s`;
+            
             setIsCalculating(false);
-            return;
+            
+            // Update States for Animation
+            setZoomPath(result.path); // Auto zoom immediately
+            setVisitedOrder(result.visitedOrder);
+            setFinalPath(result.path);
+            setRouteInfo({ 
+                distance: distanceStr, 
+                duration: durationStr 
+            }); 
+            
+            // Auto-start
+            setIsLoading(true); // "Visualizing..." state
+            setIsPlaying(true); 
+        } catch (error) {
+            console.error("Algorithm Error:", error);
+            setIsCalculating(false);
+            toast({ title: "Calculation Error", description: "An error occurred while calculating the route.", variant: "destructive" });
         }
-
-        // Format distance
-        const d = result.distance;
-        const distanceStr = d > 1000 
-            ? `${(d / 1000).toFixed(2)} km` 
-            : `${Math.round(d)} m`;
-
-        // Format duration (assuming ~35km/h or 10m/s for city driving)
-        const seconds = Math.round(d / 10);
-        const durationStr = seconds > 60 
-            ? `${Math.floor(seconds / 60)} min ${seconds % 60} s` 
-            : `${seconds} s`;
-        
-        setIsCalculating(false);
-        
-        // Update States for Animation
-        setZoomPath(result.path); // Auto zoom immediately
-        setVisitedOrder(result.visitedOrder);
-        setFinalPath(result.path);
-        setRouteInfo({ 
-            distance: distanceStr, 
-            duration: durationStr 
-        }); 
-        
-        // Auto-start
-        setIsLoading(true); // "Visualizing..." state
-        setIsPlaying(true); 
-
     }, 100);
   };
 
