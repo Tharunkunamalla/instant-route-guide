@@ -6,10 +6,23 @@ import {Card, CardContent} from "../components/ui/card";
 import { useRef, useState, useEffect } from "react";
 import gsap from "gsap";
 import { useGSAP } from "@gsap/react";
+import { ArrowUp } from "lucide-react";
+
 
 const Landing = () => {
   const containerRef = useRef(null);
   const canvasRef = useRef(null);
+  const [scrollY, setScrollY] = useState(0);
+  //scroll
+  useEffect(()=>{
+  const handleScroll = ()=>{
+    setScrollY(window.scrollY);
+  }
+  window.addEventListener("scroll", handleScroll);
+  return () => {
+    window.removeEventListener("scroll", handleScroll);
+  }
+}, [])
 
 
   useGSAP(() => {
@@ -145,6 +158,21 @@ const Landing = () => {
             ref={canvasRef} 
             className="absolute inset-0 w-full h-full pointer-events-none opacity-60"
         />
+        
+        {/* Click to go top */}
+        {scrollY > 100 && (
+                <div className="fixed bottom-4 left-4 z-50">
+                  <button
+                    onClick={() => window.scrollTo({ top: 0, behavior: "smooth" })}
+                    className="p-3 bg-primary text-primary-foreground rounded-full shadow-lg hover:bg-primary/90 transition-all hover:scale-110"
+                    aria-label="Scroll to top"
+                  >
+                    <ArrowUp className="w-5 h-5" />
+          </button>
+        </div>
+      )}
+
+
         
         <div className="container mx-auto relative z-10">
           <motion.div
