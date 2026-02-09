@@ -1,5 +1,5 @@
 import {Link} from "react-router-dom";
-import {motion} from "framer-motion";
+import {motion, AnimatePresence} from "framer-motion";
 import {MapPin, Zap, Route, Clock, ArrowRight} from "lucide-react";
 import {Button} from "../components/ui/button";
 import {Card, CardContent} from "../components/ui/card";
@@ -160,17 +160,25 @@ const Landing = () => {
         />
         
         {/* Click to go top */}
-        {scrollY > 100 && (
-                <div className="fixed bottom-4 left-4 z-50">
-                  <button
-                    onClick={() => window.scrollTo({ top: 0, behavior: "smooth" })}
-                    className="p-3 bg-primary text-primary-foreground rounded-full shadow-lg hover:bg-primary/90 transition-all hover:scale-110"
-                    aria-label="Scroll to top"
-                  >
-                    <ArrowUp className="w-5 h-5" />
-          </button>
-        </div>
-      )}
+        <AnimatePresence>
+          {scrollY > 100 && (
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: 20 }}
+              transition={{ duration: 0.3 }}
+              className="fixed bottom-8 right-8 z-50"
+            >
+              <button
+                onClick={() => window.scrollTo({ top: 0, behavior: "smooth" })}
+                className="p-4 bg-primary text-primary-foreground rounded-full shadow-xl hover:bg-primary/90 transition-all hover:scale-110 hover:shadow-2xl group"
+                aria-label="Scroll to top"
+              >
+                <ArrowUp className="w-6 h-6 group-hover:-translate-y-1 transition-transform duration-300" />
+              </button>
+            </motion.div>
+          )}
+        </AnimatePresence>
 
 
         
