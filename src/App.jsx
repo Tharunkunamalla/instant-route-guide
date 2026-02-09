@@ -1,3 +1,4 @@
+import { useState, useEffect } from "react";
 import {Toaster} from "@/components/ui/toaster";
 import {Toaster as Sonner} from "@/components/ui/sonner";
 import {TooltipProvider} from "@/components/ui/tooltip";
@@ -15,15 +16,30 @@ import Footer from "./components/Footer";
 
 const queryClient = new QueryClient();
 
-const Layout = () => (
-  <div className="flex flex-col min-h-screen">
-    <Navbar />
-    <main className="flex-1">
-      <Outlet />
-    </main>
-    <Footer />
-  </div>
-);
+const Layout = () => {
+  const [scrollY, setScrollY] = useState(0);
+
+  useEffect(() => {
+    const handleScroll = () => {
+      setScrollY(window.scrollY);
+    };
+    window.addEventListener("scroll", handleScroll);
+    return () => {
+      window.removeEventListener("scroll", handleScroll);
+    };
+  }, []);
+
+  return (
+    <div className="flex flex-col min-h-screen">
+      <div className="transition-all duration-300 ease-in-out" style={{ transform: `translateY(${scrollY}px)` }}></div>
+      <Navbar />
+      <main className="flex-1">
+        <Outlet />
+      </main>
+      <Footer />
+    </div>
+  );
+};
 
 const App = () => (
   <QueryClientProvider client={queryClient}>
